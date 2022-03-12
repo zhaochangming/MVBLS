@@ -18,11 +18,9 @@
 # -- Project information -----------------------------------------------------
 import os
 import sys
-<<<<<<< HEAD
+
 sys.path.insert(0, os.path.abspath('../../src'))
-=======
-sys.path.insert(0, os.path.abspath('../../API'))
->>>>>>> origin/main
+
 
 
 project = 'MVBLS'

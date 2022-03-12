@@ -3,4 +3,5 @@ dependencies:
   - numpy
   - scipy
   - scikit-learn
-  - tirch
+  - torch
+  - joblib

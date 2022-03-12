@@ -1,0 +1,6 @@
+name: MVBLS
+dependencies:
+  - numpy
+  - scipy
+  - scikit-learn
+  - tirch

@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MVBLS &mdash; MVBLS 1.0 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../index.html" class="icon icon-home"> MVBLS
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Python-Intro.html">Python Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../MVBLS.html">Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Parameters-Tuning.html">Parameters Tuning</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Python-Examples.html">Python Examples</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">MVBLS</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="index.html">Module code</a> &raquo;</li>
+      <li>MVBLS</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for MVBLS</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">numpy</span> <span class="kn">import</span> <span class="n">random</span>
+<span class="kn">from</span> <span class="nn">sklearn.base</span> <span class="kn">import</span> <span class="n">BaseEstimator</span><span class="p">,</span> <span class="n">ClassifierMixin</span><span class="p">,</span> <span class="n">RegressorMixin</span><span class="p">,</span> <span class="n">MultiOutputMixin</span>
+<span class="kn">from</span> <span class="nn">abc</span> <span class="kn">import</span> <span class="n">ABCMeta</span>
+<span class="kn">from</span> <span class="nn">sklearn.preprocessing</span> <span class="kn">import</span> <span class="n">StandardScaler</span><span class="p">,</span> <span class="n">LabelBinarizer</span>
+<span class="kn">from</span> <span class="nn">sklearn.linear_model</span> <span class="kn">import</span> <span class="n">Lasso</span><span class="p">,</span> <span class="n">Ridge</span><span class="p">,</span> <span class="n">RidgeClassifier</span>
+<span class="kn">from</span> <span class="nn">scipy.spatial.distance</span> <span class="kn">import</span> <span class="n">cdist</span>
+<span class="kn">from</span> <span class="nn">scipy.linalg</span> <span class="kn">import</span> <span class="n">orth</span>
+<span class="kn">from</span> <span class="nn">sklearn.utils.estimator_checks</span> <span class="kn">import</span> <span class="n">check_estimator</span>
+<span class="kn">from</span> <span class="nn">sklearn.utils.validation</span> <span class="kn">import</span> <span class="n">check_X_y</span><span class="p">,</span> <span class="n">check_array</span><span class="p">,</span> <span class="n">check_is_fitted</span>
+<span class="kn">from</span> <span class="nn">sklearn.utils</span> <span class="kn">import</span> <span class="n">column_or_1d</span>
+<span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">import</span> <span class="nn">joblib</span>
+
+
+<span class="k">class</span> <span class="nc">SemiRidge</span><span class="p">:</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">reg_alpha</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">reg_laplacian</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">k_neighbors</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">sigma</span><span class="o">=</span><span class="mf">1.0</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reg_alpha</span> <span class="o">=</span> <span class="n">reg_alpha</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reg_laplacian</span> <span class="o">=</span> <span class="n">reg_laplacian</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">k_neighbors</span> <span class="o">=</span> <span class="n">k_neighbors</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sigma</span> <span class="o">=</span> <span class="n">sigma</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_generate_laplacian_matrix</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">k_neighbors</span><span class="p">,</span> <span class="n">sigma</span><span class="o">=</span><span class="mf">1.0</span><span class="p">):</span>
+        <span class="k">assert</span> <span class="n">sigma</span> <span class="o">&gt;</span> <span class="mf">0.0</span>
+        <span class="n">S</span> <span class="o">=</span> <span class="n">cdist</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">metric</span><span class="o">=</span><span class="s1">&#39;euclidean&#39;</span><span class="p">)</span>
+        <span class="n">N</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">S</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">k_neighbors</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">W</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">N</span><span class="p">,</span> <span class="n">N</span><span class="p">))</span>
+            <span class="n">distance</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">from_numpy</span><span class="p">(</span><span class="n">S</span><span class="p">)</span>
+            <span class="n">_</span><span class="p">,</span> <span class="n">idx_near</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">topk</span><span class="p">(</span><span class="o">-</span><span class="n">distance</span><span class="p">,</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">largest</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="n">k_neighbors</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">idx_near</span> <span class="o">=</span> <span class="n">idx_near</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
+            <span class="n">idx_near</span> <span class="o">=</span> <span class="n">idx_near</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">:]</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N</span><span class="p">):</span>
+                <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">idx_near</span><span class="p">[</span><span class="n">i</span><span class="p">]:</span>
+                    <span class="n">W</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">S</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">sigma</span> <span class="o">**</span> <span class="mi">2</span><span class="p">))</span>
+                    <span class="n">W</span><span class="p">[</span><span class="n">j</span><span class="p">][</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">W</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span>
+            <span class="n">D</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">W</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">L</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">D</span><span class="p">)</span> <span class="o">-</span> <span class="n">W</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">L</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">N</span><span class="p">,</span> <span class="n">N</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">L</span>
+
+    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">sample_weight</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="n">X</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">y</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">X</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+        <span class="n">num_labeled</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+        <span class="n">X_offset</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">average</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">weights</span><span class="o">=</span><span class="n">sample_weight</span><span class="p">)</span>
+        <span class="n">X</span> <span class="o">-=</span> <span class="n">X_offset</span>
+        <span class="n">y_offset</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">average</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">weights</span><span class="o">=</span><span class="n">sample_weight</span><span class="p">)</span>
+        <span class="n">y</span> <span class="o">-=</span> <span class="n">y_offset</span>
+        <span class="n">feature_dim</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">X_labeled</span> <span class="o">=</span> <span class="n">X</span><span class="p">[:</span> <span class="n">num_labeled</span><span class="p">]</span>
+        <span class="n">number_balance</span> <span class="o">=</span> <span class="n">num_labeled</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+        <span class="n">L</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_generate_laplacian_matrix</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="nb">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">k_neighbors</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">X</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">sigma</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">coef_</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span>
+            <span class="n">X_labeled</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">X_labeled</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">reg_alpha</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">feature_dim</span><span class="p">)</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">reg_laplacian</span> <span class="o">*</span> <span class="n">number_balance</span> <span class="o">*</span> <span class="n">X</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">L</span> <span class="o">@</span> <span class="n">X</span><span class="p">)</span> <span class="o">@</span> <span class="n">X_labeled</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">y</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">intercept_</span> <span class="o">=</span> <span class="n">y_offset</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">X_offset</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">coef_</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">coef_</span><span class="p">)</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">intercept_</span>
+
+
+<span class="k">class</span> <span class="nc">NodeGenerator</span><span class="p">:</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">active_function</span><span class="o">=</span><span class="s1">&#39;relu&#39;</span><span class="p">,</span> <span class="n">n_nodes_H</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">n_nodes_Z</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">n_groups_Z</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">reg_lambda</span><span class="o">=</span><span class="mf">0.0</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_nodes_H</span> <span class="o">=</span> <span class="n">n_nodes_H</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_nodes_Z</span> <span class="o">=</span> <span class="n">n_nodes_Z</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_groups_Z</span> <span class="o">=</span> <span class="n">n_groups_Z</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reg_lambda</span> <span class="o">=</span> <span class="n">reg_lambda</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">active_function</span> <span class="o">=</span> <span class="n">active_function</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_sigmoid</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+        <span class="k">return</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">data</span><span class="p">))</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_linear</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">data</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_tanh</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">data</span><span class="p">))</span> <span class="o">/</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">data</span><span class="p">))</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_relu</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_generator</span><span class="p">(</span><span class="n">fea_dim</span><span class="p">,</span> <span class="n">node_size</span><span class="p">):</span>
+        <span class="n">W</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="n">fea_dim</span><span class="p">,</span> <span class="n">node_size</span><span class="p">))</span> <span class="o">-</span> <span class="mi">1</span>
+        <span class="n">b</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">node_size</span><span class="p">))</span> <span class="o">-</span> <span class="mi">1</span>
+        <span class="k">return</span> <span class="n">W</span><span class="p">,</span> <span class="n">b</span>
+
+    <span class="k">def</span> <span class="nf">_generate_h</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">nonlinear_</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">&#39;linear&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_linear</span><span class="p">,</span>
+            <span class="s1">&#39;sigmoid&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sigmoid</span><span class="p">,</span>
+            <span class="s1">&#39;tanh&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tanh</span><span class="p">,</span>
+            <span class="s1">&#39;relu&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_relu</span>
+        <span class="p">}[</span><span class="bp">self</span><span class="o">.</span><span class="n">active_function</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scaler_H_</span> <span class="o">=</span> <span class="n">StandardScaler</span><span class="p">()</span>
+        <span class="n">fea_dim</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">W_H</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">b_H_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_generator</span><span class="p">(</span><span class="n">fea_dim</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_nodes_H</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">fea_dim</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_nodes_H</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">W_H_</span> <span class="o">=</span> <span class="n">orth</span><span class="p">(</span><span class="n">W_H</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">W_H_</span> <span class="o">=</span> <span class="n">orth</span><span class="p">(</span><span class="n">W_H</span><span class="o">.</span><span class="n">T</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+        <span class="n">data_</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">W_H_</span><span class="p">)</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">b_H_</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">nonlinear_</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scaler_H_</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">data_</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">_generate_z</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">view</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="n">fea_dim</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">view</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">W_Z_</span><span class="p">[</span><span class="n">view</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">scaler_Z_</span><span class="p">[</span><span class="n">view</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">except</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">W_Z_</span> <span class="o">=</span> <span class="p">{}</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">scaler_Z_</span> <span class="o">=</span> <span class="p">{}</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">W_Z_</span><span class="p">[</span><span class="n">view</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">scaler_Z_</span><span class="p">[</span><span class="n">view</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">Z</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_groups_Z</span><span class="p">):</span>
+                <span class="n">W_Z</span><span class="p">,</span> <span class="n">b_Z</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_generator</span><span class="p">(</span><span class="n">fea_dim</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_nodes_Z</span><span class="p">)</span>
+                <span class="n">data_</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">W_Z</span><span class="p">)</span> <span class="o">+</span> <span class="n">b_Z</span>
+                <span class="n">model</span> <span class="o">=</span> <span class="n">Lasso</span><span class="p">(</span><span class="n">alpha</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">reg_lambda</span><span class="p">,</span> <span class="n">max_iter</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span>
+                <span class="n">model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">data_</span><span class="p">,</span> <span class="n">X</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">W_Z_</span><span class="p">[</span><span class="n">view</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">coef_</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">scaler_Z_</span><span class="p">[</span><span class="n">view</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">StandardScaler</span><span class="p">())</span>
+                <span class="n">Z_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">scaler_Z_</span><span class="p">[</span><span class="n">view</span><span class="p">][</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">W_Z_</span><span class="p">[</span><span class="n">view</span><span class="p">][</span><span class="n">i</span><span class="p">]))</span>
+                <span class="k">if</span> <span class="n">Z</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">Z</span> <span class="o">=</span> <span class="n">Z_</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">Z</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">c_</span><span class="p">[</span><span class="n">Z</span><span class="p">,</span> <span class="n">Z_</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">W_Z_</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">scaler_Z_</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">Z</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_groups_Z</span><span class="p">):</span>
+                <span class="n">W_Z</span><span class="p">,</span> <span class="n">b_Z</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_generator</span><span class="p">(</span><span class="n">fea_dim</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_nodes_Z</span><span class="p">)</span>
+                <span class="n">data_</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">W_Z</span><span class="p">)</span> <span class="o">+</span> <span class="n">b_Z</span>
+                <span class="n">model</span> <span class="o">=</span> <span class="n">Lasso</span><span class="p">(</span><span class="n">alpha</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">reg_lambda</span><span class="p">,</span> <span class="n">max_iter</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span>
+                <span class="n">model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">data_</span><span class="p">,</span> <span class="n">X</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">fea_dim</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">W_Z_</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">coef_</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">W_Z_</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">coef_</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">))</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">scaler_Z_</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">StandardScaler</span><span class="p">())</span>
+                <span class="n">Z_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">scaler_Z_</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">W_Z_</span><span class="p">[</span><span class="n">i</span><span class="p">]))</span>
+                <span class="k">if</span> <span class="n">Z</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">Z</span> <span class="o">=</span> <span class="n">Z_</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">Z</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">c_</span><span class="p">[</span><span class="n">Z</span><span class="p">,</span> <span class="n">Z_</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">Z</span>
+
+    <span class="k">def</span> <span class="nf">_transform_h</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">nonlinear_</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scaler_H_</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">W_H_</span><span class="p">)</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">b_H_</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">_transform_z</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">view</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">view</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">Z</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_groups_Z</span><span class="p">):</span>
+                <span class="n">Z_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">scaler_Z_</span><span class="p">[</span><span class="n">view</span><span class="p">][</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">W_Z_</span><span class="p">[</span><span class="n">view</span><span class="p">][</span><span class="n">i</span><span class="p">]))</span>
+                <span class="k">if</span> <span class="n">Z</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">Z</span> <span class="o">=</span> <span class="n">Z_</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">Z</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">c_</span><span class="p">[</span><span class="n">Z</span><span class="p">,</span> <span class="n">Z_</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">Z</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_groups_Z</span><span class="p">):</span>
+                <span class="n">Z_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">scaler_Z_</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">W_Z_</span><span class="p">[</span><span class="n">i</span><span class="p">]))</span>
+                <span class="k">if</span> <span class="n">Z</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">Z</span> <span class="o">=</span> <span class="n">Z_</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">Z</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">c_</span><span class="p">[</span><span class="n">Z</span><span class="p">,</span> <span class="n">Z_</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">Z</span>
+
+
+<span class="k">class</span> <span class="nc">MVBLS</span><span class="p">(</span><span class="n">NodeGenerator</span><span class="p">,</span> <span class="n">BaseEstimator</span><span class="p">,</span> <span class="n">metaclass</span><span class="o">=</span><span class="n">ABCMeta</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n_nodes_H</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">active_function</span><span class="o">=</span><span class="s1">&#39;relu&#39;</span><span class="p">,</span> <span class="n">n_nodes_Z</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">n_groups_Z</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">reg_alpha</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">reg_lambda</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">view_list</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">random_state</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+
+        <span class="n">NodeGenerator</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">active_function</span><span class="o">=</span><span class="n">active_function</span><span class="p">,</span> <span class="n">n_nodes_H</span><span class="o">=</span><span class="n">n_nodes_H</span><span class="p">,</span> <span class="n">n_nodes_Z</span><span class="o">=</span><span class="n">n_nodes_Z</span><span class="p">,</span> <span class="n">n_groups_Z</span><span class="o">=</span><span class="n">n_groups_Z</span><span class="p">,</span>
+                               <span class="n">reg_lambda</span><span class="o">=</span><span class="n">reg_lambda</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reg_alpha</span> <span class="o">=</span> <span class="n">reg_alpha</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">view_list</span> <span class="o">=</span> <span class="n">view_list</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">random_state</span> <span class="o">=</span> <span class="n">random_state</span>
+
+    <span class="k">def</span> <span class="nf">save_model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        file: str</span>
+<span class="sd">            Controls the filename.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">check_is_fitted</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;estimator_&#39;</span><span class="p">])</span>
+        <span class="n">joblib</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="n">file</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_decision_function</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
+        <span class="n">check_is_fitted</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;estimator_&#39;</span><span class="p">])</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">view_list</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span>
+            <span class="n">Z</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="k">for</span> <span class="n">view</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">view_list</span><span class="p">:</span>
+                <span class="n">X_</span> <span class="o">=</span> <span class="n">check_array</span><span class="p">(</span><span class="n">X</span><span class="p">[</span><span class="n">view</span><span class="p">])</span>
+                <span class="n">Z_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_transform_z</span><span class="p">(</span><span class="n">X_</span><span class="p">,</span> <span class="n">view</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">Z</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">Z</span> <span class="o">=</span> <span class="n">Z_</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">Z</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">c_</span><span class="p">[</span><span class="n">Z</span><span class="p">,</span> <span class="n">Z_</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">X</span> <span class="o">=</span> <span class="n">check_array</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+            <span class="n">Z</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_transform_z</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">view</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+        <span class="n">H</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_transform_h</span><span class="p">(</span><span class="n">Z</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">estimator_</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">c_</span><span class="p">[</span><span class="n">Z</span><span class="p">,</span> <span class="n">H</span><span class="p">])</span>
+
+    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Fit Ridge regression model.</span>
+
+<span class="sd">            Parameters</span>
+<span class="sd">            ----------</span>
+<span class="sd">            X : {ndarray, sparse matrix} of shape (n_samples, n_features)</span>
+<span class="sd">                Training data</span>
+
+<span class="sd">            y : ndarray of shape (n_samples,) or (n_samples, n_targets)</span>
+<span class="sd">                Target values</span>
+
+<span class="sd">            Returns</span>
+<span class="sd">            -------</span>
+<span class="sd">            self : returns an instance of self.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">random_state</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">estimator_</span> <span class="o">=</span> <span class="n">Ridge</span><span class="p">(</span><span class="n">alpha</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">reg_alpha</span><span class="p">)</span>
+        <span class="c1"># generate Z</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">view_list</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span>
+            <span class="n">Z</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="k">for</span> <span class="n">view</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">view_list</span><span class="p">:</span>
+                <span class="n">X_</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">check_X_y</span><span class="p">(</span><span class="n">X</span><span class="p">[</span><span class="n">view</span><span class="p">],</span> <span class="n">y</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">],</span> <span class="n">multi_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">y_numeric</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="n">Z_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_generate_z</span><span class="p">(</span><span class="n">X_</span><span class="p">,</span> <span class="n">view</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">Z</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">Z</span> <span class="o">=</span> <span class="n">Z_</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">Z</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">c_</span><span class="p">[</span><span class="n">Z</span><span class="p">,</span> <span class="n">Z_</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">X</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">check_X_y</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">],</span> <span class="n">multi_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">y_numeric</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">Z</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_generate_z</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">view</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+        <span class="c1"># generate H</span>
+        <span class="n">H</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_generate_h</span><span class="p">(</span><span class="n">Z</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">estimator_</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">c_</span><span class="p">[</span><span class="n">Z</span><span class="p">,</span> <span class="n">H</span><span class="p">],</span> <span class="n">y</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+
+<div class="viewcode-block" id="MVBLSRegressor"><a class="viewcode-back" href="../MVBLS.html#MVBLS.MVBLSRegressor">[docs]</a><span class="k">class</span> <span class="nc">MVBLSRegressor</span><span class="p">(</span><span class="n">MultiOutputMixin</span><span class="p">,</span> <span class="n">RegressorMixin</span><span class="p">,</span> <span class="n">MVBLS</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">            Parameters</span>
+<span class="sd">            ----------</span>
+<span class="sd">            n_nodes_H: int, default=10</span>
+<span class="sd">                        Controls the number of enhancement nodes.</span>
+<span class="sd">            active_function: {str, (&#39;relu&#39;, &#39;tanh&#39;, &#39;sigmod&#39; or &#39;linear&#39;)}, default=&#39;relu&#39;</span>
+<span class="sd">                            Controls the active function of enhancement nodes.</span>
+<span class="sd">            n_nodes_Z: int, default=10</span>
+<span class="sd">                        Controls the number of feature nodes in each group.</span>
+<span class="sd">            n_groups_Z: int, default=10</span>
+<span class="sd">                        Controls the number of feature node groups.</span>
+<span class="sd">            reg_alpha: float, default=1.0</span>
+<span class="sd">                        Regularization strength; must be a positive float. Regularization improves the conditioning of the problem and reduces the variance of the estimates. Larger values specify stronger regularization.</span>
+<span class="sd">            reg_lambda: float, default=1.0</span>
+<span class="sd">                        Constant that multiplies the L1 term. Defaults to 1.0. ``alpha = 0`` is equivalent to an ordinary least square.</span>
+<span class="sd">            view_list: list, default=None</span>
+<span class="sd">                        List of view names.</span>
+<span class="sd">            random_state: int, default=None</span>
+<span class="sd">                            Controls the randomness of the estimator.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="MVBLSRegressor.predict"><a class="viewcode-back" href="../MVBLS.html#MVBLS.MVBLSRegressor.predict">[docs]</a>    <span class="k">def</span> <span class="nf">predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">                Predict using the linear model.</span>
+
+<span class="sd">                Parameters</span>
+<span class="sd">                ----------</span>
+<span class="sd">                X : array_like or sparse matrix, shape (n_samples, n_features)</span>
+<span class="sd">                    Samples.</span>
+
+<span class="sd">                Returns</span>
+<span class="sd">                -------</span>
+<span class="sd">                C : array, shape (n_samples,)</span>
+<span class="sd">                    Returns predicted values.</span>
+<span class="sd">                &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_decision_function</span><span class="p">(</span><span class="n">X</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="MVBLSClassifier"><a class="viewcode-back" href="../MVBLS.html#MVBLS.MVBLSClassifier">[docs]</a><span class="k">class</span> <span class="nc">MVBLSClassifier</span><span class="p">(</span><span class="n">ClassifierMixin</span><span class="p">,</span> <span class="n">MVBLS</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        n_nodes_H: int, default=10</span>
+<span class="sd">                    Controls the number of enhancement nodes.</span>
+<span class="sd">        active_function: {str, (&#39;relu&#39;, &#39;tanh&#39;, &#39;sigmod&#39; or &#39;linear&#39;)}, default=&#39;relu&#39;</span>
+<span class="sd">                        Controls the active function of enhancement nodes.</span>
+<span class="sd">        n_nodes_Z: int, default=10</span>
+<span class="sd">                    Controls the number of feature nodes in each group.</span>
+<span class="sd">        n_groups_Z: int, default=10</span>
+<span class="sd">                    Controls the number of feature node groups.</span>
+<span class="sd">        reg_alpha: float, default=1.0</span>
+<span class="sd">                    Regularization strength; must be a positive float. Regularization improves the conditioning of the problem and reduces the variance of the estimates. Larger values specify stronger regularization.</span>
+<span class="sd">        reg_lambda: float, default=1.0</span>
+<span class="sd">                    Constant that multiplies the L1 term. Defaults to 1.0. ``alpha = 0`` is equivalent to an ordinary least square.</span>
+<span class="sd">        view_list: list, default=None</span>
+<span class="sd">                    List of view names.</span>
+<span class="sd">        random_state: int, default=None</span>
+<span class="sd">                        Controls the randomness of the estimator.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="MVBLSClassifier.predict"><a class="viewcode-back" href="../MVBLS.html#MVBLS.MVBLSClassifier.predict">[docs]</a>    <span class="k">def</span> <span class="nf">predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">                Predict class labels for samples in X.</span>
+
+<span class="sd">                Parameters</span>
+<span class="sd">                ----------</span>
+<span class="sd">                X : array_like or sparse matrix, shape (n_samples, n_features)</span>
+<span class="sd">                    Samples.</span>
+
+<span class="sd">                Returns</span>
+<span class="sd">                -------</span>
+<span class="sd">                C : array, shape [n_samples]</span>
+<span class="sd">                    Predicted class label per sample.</span>
+<span class="sd">                &quot;&quot;&quot;</span>
+        <span class="n">scores</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_decision_function</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+        <span class="n">scores</span> <span class="o">=</span> <span class="n">scores</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span> <span class="k">if</span> <span class="n">scores</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span> <span class="k">else</span> <span class="n">scores</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">scores</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">indices</span> <span class="o">=</span> <span class="p">(</span><span class="n">scores</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">indices</span> <span class="o">=</span> <span class="n">scores</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">classes_</span><span class="p">[</span><span class="n">indices</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="MVBLSClassifier.fit"><a class="viewcode-back" href="../MVBLS.html#MVBLS.MVBLSClassifier.fit">[docs]</a>    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Fit Ridge classifier model.</span>
+
+<span class="sd">            Parameters</span>
+<span class="sd">            ----------</span>
+<span class="sd">            X : {ndarray, sparse matrix} of shape (n_samples, n_features)</span>
+<span class="sd">                Training data.</span>
+
+<span class="sd">            y : ndarray of shape (n_samples,)</span>
+<span class="sd">                Target values.</span>
+
+<span class="sd">            sample_weight : float or ndarray of shape (n_samples,), default=None</span>
+<span class="sd">                Individual weights for each sample. If given a float, every sample</span>
+<span class="sd">                will have the same weight.</span>
+
+<span class="sd">                .. versionadded:: 0.17</span>
+<span class="sd">                   *sample_weight* support to Classifier.</span>
+
+<span class="sd">            Returns</span>
+<span class="sd">            -------</span>
+<span class="sd">            self : object</span>
+<span class="sd">                Instance of the estimator.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_label_binarizer</span> <span class="o">=</span> <span class="n">LabelBinarizer</span><span class="p">(</span><span class="n">pos_label</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">neg_label</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">Y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_label_binarizer</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_label_binarizer</span><span class="o">.</span><span class="n">y_type_</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;multilabel&#39;</span><span class="p">):</span>
+            <span class="n">y</span> <span class="o">=</span> <span class="n">column_or_1d</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">warn</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># we don&#39;t (yet) support multi-label classification in Ridge</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> doesn&#39;t support multi-label classification&quot;</span> <span class="o">%</span> <span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">))</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">classes_</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Classes labels</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_label_binarizer</span><span class="o">.</span><span class="n">classes_</span></div>
+
+
+<span class="k">class</span> <span class="nc">SemiMVBLS</span><span class="p">(</span><span class="n">MVBLS</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">reg_laplacian</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">k_neighbors</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">sigma</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">unlabeled_data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">MVBLS</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reg_laplacian</span> <span class="o">=</span> <span class="n">reg_laplacian</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">k_neighbors</span> <span class="o">=</span> <span class="n">k_neighbors</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sigma</span> <span class="o">=</span> <span class="n">sigma</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">unlabeled_data</span> <span class="o">=</span> <span class="n">unlabeled_data</span>
+
+    <span class="k">def</span> <span class="nf">save_model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        file: str</span>
+<span class="sd">            Controls the filename.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">check_is_fitted</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;estimator_&#39;</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">unlabeled_data</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">joblib</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="n">file</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Fit Ridge regression model.</span>
+
+<span class="sd">                    Parameters</span>
+<span class="sd">                    ----------</span>
+<span class="sd">                    X : {ndarray, sparse matrix} of shape (n_samples, n_features)</span>
+<span class="sd">                        Training data</span>
+
+<span class="sd">                    y : ndarray of shape (n_samples,) or (n_samples, n_targets)</span>
+<span class="sd">                        Target values</span>
+
+<span class="sd">                    Returns</span>
+<span class="sd">                    -------</span>
+<span class="sd">                    self : returns an instance of self.</span>
+<span class="sd">                &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">unlabeled_data</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">unlabeled_data</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">random_state</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">estimator_</span> <span class="o">=</span> <span class="n">SemiRidge</span><span class="p">(</span><span class="n">reg_alpha</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">reg_alpha</span><span class="p">,</span> <span class="n">reg_laplacian</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">reg_laplacian</span><span class="p">,</span> <span class="n">k_neighbors</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">k_neighbors</span><span class="p">,</span> <span class="n">sigma</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sigma</span><span class="p">)</span>
+        <span class="c1"># generate Z</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">view_list</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span>
+            <span class="n">Z</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="k">for</span> <span class="n">view</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">view_list</span><span class="p">:</span>
+                <span class="n">X_</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">check_X_y</span><span class="p">(</span><span class="n">X</span><span class="p">[</span><span class="n">view</span><span class="p">],</span> <span class="n">y</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">],</span> <span class="n">multi_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">y_numeric</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">unlabeled_data</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">Z_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_generate_z</span><span class="p">(</span><span class="n">X_</span><span class="p">,</span> <span class="n">view</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">uX_</span> <span class="o">=</span> <span class="n">check_array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">unlabeled_data</span><span class="p">[</span><span class="n">view</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">])</span>
+                    <span class="n">Z_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_generate_z</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">r_</span><span class="p">[</span><span class="n">X_</span><span class="p">,</span> <span class="n">uX_</span><span class="p">],</span> <span class="n">view</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">Z</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">Z</span> <span class="o">=</span> <span class="n">Z_</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">Z</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">c_</span><span class="p">[</span><span class="n">Z</span><span class="p">,</span> <span class="n">Z_</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">X</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">check_X_y</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">],</span> <span class="n">multi_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">y_numeric</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">unlabeled_data</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">Z</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_generate_z</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">view</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">uX_</span> <span class="o">=</span> <span class="n">check_array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">unlabeled_data</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">])</span>
+                <span class="n">Z</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_generate_z</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">r_</span><span class="p">[</span><span class="n">X</span><span class="p">,</span> <span class="n">uX_</span><span class="p">],</span> <span class="n">view</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+        <span class="c1"># generate H</span>
+        <span class="n">H</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_generate_h</span><span class="p">(</span><span class="n">Z</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">estimator_</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">c_</span><span class="p">[</span><span class="n">Z</span><span class="p">,</span> <span class="n">H</span><span class="p">],</span> <span class="n">y</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+
+<div class="viewcode-block" id="SemiMVBLSClassifier"><a class="viewcode-back" href="../MVBLS.html#MVBLS.SemiMVBLSClassifier">[docs]</a><span class="k">class</span> <span class="nc">SemiMVBLSClassifier</span><span class="p">(</span><span class="n">ClassifierMixin</span><span class="p">,</span> <span class="n">SemiMVBLS</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">            Parameters</span>
+<span class="sd">            ----------</span>
+<span class="sd">            reg_laplacian: float, default=1.0</span>
+<span class="sd">                        Constant that multiplies the laplacian term. Defaults to 1.0. ``reg_laplacian = 0`` is equivalent to an Ridge regression.</span>
+<span class="sd">            k_neighbors: int, default=5</span>
+<span class="sd">                        Number of neighbors to use when constructing the affinity matrix using the nearest neighbors method.</span>
+<span class="sd">            sigma: float, default=1.0</span>
+<span class="sd">                Kernel coefficient for rbf.</span>
+<span class="sd">            unlabeled_data: {ndarray, sparse matrix} of shape (n_samples, n_features) or {dict}</span>
+<span class="sd">                    Unlabeled training data.</span>
+<span class="sd">            n_nodes_H: int, default=10</span>
+<span class="sd">                        Controls the number of enhancement nodes.</span>
+<span class="sd">            active_function: {str, (&#39;relu&#39;, &#39;tanh&#39;, &#39;sigmod&#39; or &#39;linear&#39;)}, default=&#39;relu&#39;</span>
+<span class="sd">                            Controls the active function of enhancement nodes.</span>
+<span class="sd">            n_nodes_Z: int, default=10</span>
+<span class="sd">                        Controls the number of feature nodes in each group.</span>
+<span class="sd">            n_groups_Z: int, default=10</span>
+<span class="sd">                        Controls the number of feature node groups.</span>
+<span class="sd">            reg_alpha: float, default=1.0</span>
+<span class="sd">                        Regularization strength; must be a positive float. Regularization improves the conditioning of the problem and reduces the variance of the estimates. Larger values specify stronger regularization.</span>
+<span class="sd">            reg_lambda: float, default=1.0</span>
+<span class="sd">                        Constant that multiplies the L1 term. Defaults to 1.0. ``reg_lambda = 0`` is equivalent to an ordinary least square.</span>
+<span class="sd">            view_list: list, default=None</span>
+<span class="sd">                        List of view names.</span>
+<span class="sd">            random_state: int, default=None</span>
+<span class="sd">                            Controls the randomness of the estimator.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="SemiMVBLSClassifier.predict"><a class="viewcode-back" href="../MVBLS.html#MVBLS.SemiMVBLSClassifier.predict">[docs]</a>    <span class="k">def</span> <span class="nf">predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">                Predict class labels for samples in X.</span>
+
+<span class="sd">                Parameters</span>
+<span class="sd">                ----------</span>
+<span class="sd">                X : array_like or sparse matrix, shape (n_samples, n_features)</span>
+<span class="sd">                    Samples.</span>
+
+<span class="sd">                Returns</span>
+<span class="sd">                -------</span>
+<span class="sd">                C : array, shape [n_samples]</span>
+<span class="sd">                    Predicted class label per sample.</span>
+<span class="sd">                &quot;&quot;&quot;</span>
+        <span class="n">scores</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_decision_function</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+        <span class="n">scores</span> <span class="o">=</span> <span class="n">scores</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span> <span class="k">if</span> <span class="n">scores</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span> <span class="k">else</span> <span class="n">scores</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">scores</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">indices</span> <span class="o">=</span> <span class="p">(</span><span class="n">scores</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">indices</span> <span class="o">=</span> <span class="n">scores</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">classes_</span><span class="p">[</span><span class="n">indices</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="SemiMVBLSClassifier.fit"><a class="viewcode-back" href="../MVBLS.html#MVBLS.SemiMVBLSClassifier.fit">[docs]</a>    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Fit Ridge classifier model.</span>
+
+<span class="sd">                Parameters</span>
+<span class="sd">                ----------</span>
+<span class="sd">                X : {ndarray, sparse matrix} of shape (n_samples, n_features)</span>
+<span class="sd">                    Training data.</span>
+
+<span class="sd">                y : ndarray of shape (n_samples,)</span>
+<span class="sd">                    Target values.</span>
+
+<span class="sd">                sample_weight : float or ndarray of shape (n_samples,), default=None</span>
+<span class="sd">                    Individual weights for each sample. If given a float, every sample</span>
+<span class="sd">                    will have the same weight.</span>
+
+<span class="sd">                    .. versionadded:: 0.17</span>
+<span class="sd">                       *sample_weight* support to Classifier.</span>
+
+<span class="sd">                Returns</span>
+<span class="sd">                -------</span>
+<span class="sd">                self : object</span>
+<span class="sd">                    Instance of the estimator.</span>
+<span class="sd">                &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_label_binarizer</span> <span class="o">=</span> <span class="n">LabelBinarizer</span><span class="p">(</span><span class="n">pos_label</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">neg_label</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">Y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_label_binarizer</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_label_binarizer</span><span class="o">.</span><span class="n">y_type_</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;multilabel&#39;</span><span class="p">):</span>
+            <span class="n">_</span> <span class="o">=</span> <span class="n">column_or_1d</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">warn</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> doesn&#39;t support multi-label classification&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">))</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">classes_</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Classes labels</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_label_binarizer</span><span class="o">.</span><span class="n">classes_</span></div>
+
+
+<div class="viewcode-block" id="SemiMVBLSRegressor"><a class="viewcode-back" href="../MVBLS.html#MVBLS.SemiMVBLSRegressor">[docs]</a><span class="k">class</span> <span class="nc">SemiMVBLSRegressor</span><span class="p">(</span><span class="n">MultiOutputMixin</span><span class="p">,</span> <span class="n">RegressorMixin</span><span class="p">,</span> <span class="n">SemiMVBLS</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">            Parameters</span>
+<span class="sd">            ----------</span>
+<span class="sd">            reg_laplacian: float, default=1.0</span>
+<span class="sd">                        Constant that multiplies the laplacian term. Defaults to 1.0. ``reg_laplacian = 0`` is equivalent to an Ridge regression.</span>
+<span class="sd">            k_neighbors: int, default=5</span>
+<span class="sd">                        Number of neighbors to use when constructing the affinity matrix using the nearest neighbors method.</span>
+<span class="sd">            sigma: float, default=1.0</span>
+<span class="sd">                Kernel coefficient for rbf.</span>
+<span class="sd">            unlabeled_data: {ndarray, sparse matrix} of shape (n_samples, n_features) or {dict}</span>
+<span class="sd">                    Unlabeled training data.</span>
+<span class="sd">            n_nodes_H: int, default=10</span>
+<span class="sd">                        Controls the number of enhancement nodes.</span>
+<span class="sd">            active_function: {str, (&#39;relu&#39;, &#39;tanh&#39;, &#39;sigmod&#39; or &#39;linear&#39;)}, default=&#39;relu&#39;</span>
+<span class="sd">                            Controls the active function of enhancement nodes.</span>
+<span class="sd">            n_nodes_Z: int, default=10</span>
+<span class="sd">                        Controls the number of feature nodes in each group.</span>
+<span class="sd">            n_groups_Z: int, default=10</span>
+<span class="sd">                        Controls the number of feature node groups.</span>
+<span class="sd">            reg_alpha: float, default=1.0</span>
+<span class="sd">                        Regularization strength; must be a positive float. Regularization improves the conditioning of the problem and reduces the variance of the estimates. Larger values specify stronger regularization.</span>
+<span class="sd">            reg_lambda: float, default=1.0</span>
+<span class="sd">                        Constant that multiplies the L1 term. Defaults to 1.0. ``alpha = 0`` is equivalent to an ordinary least square.</span>
+<span class="sd">            view_list: list, default=None</span>
+<span class="sd">                        List of view names.</span>
+<span class="sd">            random_state: int, default=None</span>
+<span class="sd">                            Controls the randomness of the estimator.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="SemiMVBLSRegressor.predict"><a class="viewcode-back" href="../MVBLS.html#MVBLS.SemiMVBLSRegressor.predict">[docs]</a>    <span class="k">def</span> <span class="nf">predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">                Predict using the linear model.</span>
+
+<span class="sd">                Parameters</span>
+<span class="sd">                ----------</span>
+<span class="sd">                X : array_like or sparse matrix, shape (n_samples, n_features)</span>
+<span class="sd">                    Samples.</span>
+
+<span class="sd">                Returns</span>
+<span class="sd">                -------</span>
+<span class="sd">                C : array, shape (n_samples,)</span>
+<span class="sd">                    Returns predicted values.</span>
+<span class="sd">                &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_decision_function</span><span class="p">(</span><span class="n">X</span><span class="p">)</span></div></div>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="c1"># Check if meet Sklearn&#39;s manner</span>
+    <span class="c1"># ------------------------------------</span>
+    <span class="n">check_estimator</span><span class="p">(</span><span class="n">MVBLS</span><span class="p">())</span>
+    <span class="n">check_estimator</span><span class="p">(</span><span class="n">MVBLSRegressor</span><span class="p">())</span>
+    <span class="n">check_estimator</span><span class="p">(</span><span class="n">MVBLSClassifier</span><span class="p">())</span>
+    <span class="n">check_estimator</span><span class="p">(</span><span class="n">SemiMVBLS</span><span class="p">())</span>
+    <span class="n">check_estimator</span><span class="p">(</span><span class="n">SemiMVBLSRegressor</span><span class="p">())</span>
+    <span class="n">check_estimator</span><span class="p">(</span><span class="n">SemiMVBLSClassifier</span><span class="p">())</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, Chang-ming Zhao (HUST BCI&amp;ML Lab).</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

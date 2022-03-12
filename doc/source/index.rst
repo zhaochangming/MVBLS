@@ -2,6 +2,8 @@
 Welcome to MVBLS's documentation!
 =======================================
 
+This is test.
+
 **Multi-view broad learning systerm (MVBLS)** [1] is a multi-view or multi-modal framework that bases on BLS [2]. It is designed to be efficient with the following advantages:
 
 

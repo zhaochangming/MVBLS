@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Python Examples &mdash; MVBLS 1.0 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="Parameters Tuning" href="Parameters-Tuning.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="index.html" class="icon icon-home"> MVBLS
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="Python-Intro.html">Python Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="MVBLS.html">Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Parameters-Tuning.html">Parameters Tuning</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Python Examples</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#mvbls-mvblsclassifier">MVBLS.MVBLSClassifier</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#mvbls-mvblsregressor">MVBLS.MVBLSRegressor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#mvbls-semimvblsclassifier">MVBLS.SemiMVBLSClassifier</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#mvbls-semimvblsregressor">MVBLS.SemiMVBLSRegressor</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">MVBLS</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+      <li>Python Examples</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/Python-Examples.md.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="python-examples">
+<h1>Python Examples<a class="headerlink" href="#python-examples" title="Permalink to this headline"></a></h1>
+<p>This page shows some demos.</p>
+<section id="mvbls-mvblsclassifier">
+<h2>MVBLS.MVBLSClassifier<a class="headerlink" href="#mvbls-mvblsclassifier" title="Permalink to this headline"></a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">MVBLS</span> <span class="kn">import</span> <span class="n">MVBLSClassifier</span>
+<span class="kn">from</span> <span class="nn">sklearn.linear_model</span> <span class="kn">import</span> <span class="n">RidgeClassifier</span>
+
+<span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s1">&#39;clf_data.npz&#39;</span><span class="p">)</span>
+<span class="n">data_train</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="n">data_train</span><span class="p">[</span><span class="s1">&#39;view1&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;X_train&#39;</span><span class="p">][:,</span> <span class="p">:</span><span class="mi">128</span><span class="p">]</span>
+<span class="n">data_train</span><span class="p">[</span><span class="s1">&#39;view2&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;X_train&#39;</span><span class="p">][:,</span> <span class="mi">128</span><span class="p">:]</span>
+<span class="n">data_test</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="n">data_test</span><span class="p">[</span><span class="s1">&#39;view1&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;X_test&#39;</span><span class="p">][:,</span> <span class="p">:</span><span class="mi">128</span><span class="p">]</span>
+<span class="n">data_test</span><span class="p">[</span><span class="s1">&#39;view2&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;X_test&#39;</span><span class="p">][:,</span> <span class="mi">128</span><span class="p">:]</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">RidgeClassifier</span><span class="p">(</span><span class="n">alpha</span><span class="o">=</span><span class="mf">0.01</span><span class="p">)</span>
+<span class="n">model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;X_train&#39;</span><span class="p">],</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;y_train&#39;</span><span class="p">])</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;ACC of Baseline: </span><span class="si">%.3f</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">model</span><span class="o">.</span><span class="n">score</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;X_test&#39;</span><span class="p">],</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;y_test&#39;</span><span class="p">]))</span>
+
+<span class="n">model</span> <span class="o">=</span> <span class="n">MVBLSClassifier</span><span class="p">(</span><span class="n">view_list</span><span class="o">=</span><span class="n">data_train</span><span class="o">.</span><span class="n">keys</span><span class="p">(),</span> <span class="n">reg_lambda</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span> <span class="n">n_nodes_Z</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">n_nodes_H</span><span class="o">=</span><span class="mi">6000</span><span class="p">,</span> <span class="n">n_groups_Z</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">reg_alpha</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span>
+                        <span class="n">random_state</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">data_train</span><span class="p">,</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;y_train&#39;</span><span class="p">])</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;ACC of MVBLSClassifier: </span><span class="si">%.3f</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">model</span><span class="o">.</span><span class="n">score</span><span class="p">(</span><span class="n">data_test</span><span class="p">,</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;y_test&#39;</span><span class="p">]))</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ACC</span> <span class="n">of</span> <span class="n">Baseline</span><span class="p">:</span> <span class="mf">0.793</span>
+<span class="n">ACC</span> <span class="n">of</span> <span class="n">MVBLSClassifier</span><span class="p">:</span> <span class="mf">0.817</span>
+</pre></div>
+</div>
+</section>
+<section id="mvbls-mvblsregressor">
+<h2>MVBLS.MVBLSRegressor<a class="headerlink" href="#mvbls-mvblsregressor" title="Permalink to this headline"></a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">MVBLS</span> <span class="kn">import</span> <span class="n">MVBLSRegressor</span>
+<span class="kn">from</span> <span class="nn">sklearn.linear_model</span> <span class="kn">import</span> <span class="n">Ridge</span>
+
+<span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s1">&#39;reg_data.npz&#39;</span><span class="p">)</span>
+<span class="n">data_train</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="n">data_train</span><span class="p">[</span><span class="s1">&#39;view1&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;X_train&#39;</span><span class="p">][:,</span> <span class="p">:</span><span class="mi">128</span><span class="p">]</span>
+<span class="n">data_train</span><span class="p">[</span><span class="s1">&#39;view2&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;X_train&#39;</span><span class="p">][:,</span> <span class="mi">128</span><span class="p">:]</span>
+<span class="n">data_test</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="n">data_test</span><span class="p">[</span><span class="s1">&#39;view1&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;X_test&#39;</span><span class="p">][:,</span> <span class="p">:</span><span class="mi">128</span><span class="p">]</span>
+<span class="n">data_test</span><span class="p">[</span><span class="s1">&#39;view2&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;X_test&#39;</span><span class="p">][:,</span> <span class="mi">128</span><span class="p">:]</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">Ridge</span><span class="p">(</span><span class="n">alpha</span><span class="o">=</span><span class="mf">0.01</span><span class="p">)</span>
+<span class="n">model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;X_train&#39;</span><span class="p">],</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;y_train&#39;</span><span class="p">])</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;R^2 of Baseline: </span><span class="si">%.3f</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">model</span><span class="o">.</span><span class="n">score</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;X_test&#39;</span><span class="p">],</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;y_test&#39;</span><span class="p">]))</span>
+
+<span class="n">model</span> <span class="o">=</span> <span class="n">MVBLSRegressor</span><span class="p">(</span><span class="n">view_list</span><span class="o">=</span><span class="n">data_train</span><span class="o">.</span><span class="n">keys</span><span class="p">(),</span> <span class="n">reg_lambda</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span> <span class="n">n_nodes_Z</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">n_nodes_H</span><span class="o">=</span><span class="mi">6000</span><span class="p">,</span> <span class="n">n_groups_Z</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">reg_alpha</span><span class="o">=</span><span class="mf">0.01</span><span class="p">)</span>
+<span class="n">model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">data_train</span><span class="p">,</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;y_train&#39;</span><span class="p">])</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;R^2 of  MVBLSRegressor: </span><span class="si">%.3f</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">model</span><span class="o">.</span><span class="n">score</span><span class="p">(</span><span class="n">data_test</span><span class="p">,</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;y_test&#39;</span><span class="p">]))</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">R</span><span class="o">^</span><span class="mi">2</span> <span class="n">of</span> <span class="n">Baseline</span><span class="p">:</span> <span class="mf">0.798</span>
+<span class="n">R</span><span class="o">^</span><span class="mi">2</span> <span class="n">of</span>  <span class="n">MVBLSRegressor</span><span class="p">:</span> <span class="mf">0.938</span>
+</pre></div>
+</div>
+</section>
+<section id="mvbls-semimvblsclassifier">
+<h2>MVBLS.SemiMVBLSClassifier<a class="headerlink" href="#mvbls-semimvblsclassifier" title="Permalink to this headline"></a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">MVBLS</span> <span class="kn">import</span> <span class="n">SemiMVBLSClassifier</span>
+<span class="kn">from</span> <span class="nn">sklearn.linear_model</span> <span class="kn">import</span> <span class="n">RidgeClassifier</span>
+
+<span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s1">&#39;clf_data.npz&#39;</span><span class="p">)</span>
+<span class="n">few_short_index</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;few_short_index&#39;</span><span class="p">]</span>
+<span class="n">data_train</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="n">unlabeled_data_train</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="n">data_train</span><span class="p">[</span><span class="s1">&#39;view1&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;X_train&#39;</span><span class="p">][:,</span> <span class="p">:</span><span class="mi">128</span><span class="p">][</span><span class="n">few_short_index</span><span class="p">]</span>
+<span class="n">data_train</span><span class="p">[</span><span class="s1">&#39;view2&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;X_train&#39;</span><span class="p">][:,</span> <span class="mi">128</span><span class="p">:][</span><span class="n">few_short_index</span><span class="p">]</span>
+<span class="n">unlabeled_data_train</span><span class="p">[</span><span class="s1">&#39;view1&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;X_train&#39;</span><span class="p">][:,</span> <span class="p">:</span><span class="mi">128</span><span class="p">][</span><span class="o">~</span><span class="n">few_short_index</span><span class="p">]</span>
+<span class="n">unlabeled_data_train</span><span class="p">[</span><span class="s1">&#39;view2&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;X_train&#39;</span><span class="p">][:,</span> <span class="mi">128</span><span class="p">:][</span><span class="o">~</span><span class="n">few_short_index</span><span class="p">]</span>
+<span class="n">data_test</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="n">data_test</span><span class="p">[</span><span class="s1">&#39;view1&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;X_test&#39;</span><span class="p">][:,</span> <span class="p">:</span><span class="mi">128</span><span class="p">]</span>
+<span class="n">data_test</span><span class="p">[</span><span class="s1">&#39;view2&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;X_test&#39;</span><span class="p">][:,</span> <span class="mi">128</span><span class="p">:]</span>
+
+<span class="n">model</span> <span class="o">=</span> <span class="n">RidgeClassifier</span><span class="p">(</span><span class="n">alpha</span><span class="o">=</span><span class="mf">0.01</span><span class="p">)</span>
+<span class="n">model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;X_train&#39;</span><span class="p">][</span><span class="n">few_short_index</span><span class="p">],</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;y_train&#39;</span><span class="p">][</span><span class="n">few_short_index</span><span class="p">])</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;ACC of Baseline: </span><span class="si">%.3f</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">model</span><span class="o">.</span><span class="n">score</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;X_test&#39;</span><span class="p">],</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;y_test&#39;</span><span class="p">]))</span>
+
+<span class="n">model</span> <span class="o">=</span> <span class="n">SemiMVBLSClassifier</span><span class="p">(</span><span class="n">view_list</span><span class="o">=</span><span class="n">data_train</span><span class="o">.</span><span class="n">keys</span><span class="p">(),</span> <span class="n">unlabeled_data</span><span class="o">=</span><span class="n">unlabeled_data_train</span><span class="p">,</span> <span class="n">reg_lambda</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span> <span class="n">n_nodes_Z</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">n_nodes_H</span><span class="o">=</span><span class="mi">6000</span><span class="p">,</span>
+                            <span class="n">n_groups_Z</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">reg_alpha</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span> <span class="n">reg_laplacian</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span> <span class="n">k_neighbors</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">sigma</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
+<span class="n">model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">data_train</span><span class="p">,</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;y_train&#39;</span><span class="p">][</span><span class="n">few_short_index</span><span class="p">])</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;ACC of SemiMVBLSClassifier: </span><span class="si">%.3f</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">model</span><span class="o">.</span><span class="n">score</span><span class="p">(</span><span class="n">data_test</span><span class="p">,</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;y_test&#39;</span><span class="p">]))</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ACC</span> <span class="n">of</span> <span class="n">Baseline</span><span class="p">:</span> <span class="mf">0.668</span>
+<span class="n">ACC</span> <span class="n">of</span> <span class="n">SemiMVBLSClassifier</span><span class="p">:</span> <span class="mf">0.681</span>
+</pre></div>
+</div>
+</section>
+<section id="mvbls-semimvblsregressor">
+<h2>MVBLS.SemiMVBLSRegressor<a class="headerlink" href="#mvbls-semimvblsregressor" title="Permalink to this headline"></a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">MVBLS</span> <span class="kn">import</span> <span class="n">SemiMVBLSRegressor</span>
+<span class="kn">from</span> <span class="nn">sklearn.linear_model</span> <span class="kn">import</span> <span class="n">Ridge</span>
+
+<span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s1">&#39;reg_data.npz&#39;</span><span class="p">)</span>
+<span class="n">few_short_index</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;few_short_index&#39;</span><span class="p">]</span>
+<span class="n">data_train</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="n">unlabeled_data_train</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="n">data_train</span><span class="p">[</span><span class="s1">&#39;view1&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;X_train&#39;</span><span class="p">][:,</span> <span class="p">:</span><span class="mi">128</span><span class="p">][</span><span class="n">few_short_index</span><span class="p">]</span>
+<span class="n">data_train</span><span class="p">[</span><span class="s1">&#39;view2&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;X_train&#39;</span><span class="p">][:,</span> <span class="mi">128</span><span class="p">:][</span><span class="n">few_short_index</span><span class="p">]</span>
+<span class="n">unlabeled_data_train</span><span class="p">[</span><span class="s1">&#39;view1&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;X_train&#39;</span><span class="p">][:,</span> <span class="p">:</span><span class="mi">128</span><span class="p">][</span><span class="o">~</span><span class="n">few_short_index</span><span class="p">]</span>
+<span class="n">unlabeled_data_train</span><span class="p">[</span><span class="s1">&#39;view2&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;X_train&#39;</span><span class="p">][:,</span> <span class="mi">128</span><span class="p">:][</span><span class="o">~</span><span class="n">few_short_index</span><span class="p">]</span>
+<span class="n">data_test</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="n">data_test</span><span class="p">[</span><span class="s1">&#39;view1&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;X_test&#39;</span><span class="p">][:,</span> <span class="p">:</span><span class="mi">128</span><span class="p">]</span>
+<span class="n">data_test</span><span class="p">[</span><span class="s1">&#39;view2&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;X_test&#39;</span><span class="p">][:,</span> <span class="mi">128</span><span class="p">:]</span>
+
+<span class="n">model</span> <span class="o">=</span> <span class="n">Ridge</span><span class="p">(</span><span class="n">alpha</span><span class="o">=</span><span class="mf">0.01</span><span class="p">)</span>
+<span class="n">model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;X_train&#39;</span><span class="p">][</span><span class="n">few_short_index</span><span class="p">],</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;y_train&#39;</span><span class="p">][</span><span class="n">few_short_index</span><span class="p">])</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;R^2 of Baseline: </span><span class="si">%.3f</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">model</span><span class="o">.</span><span class="n">score</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;X_test&#39;</span><span class="p">],</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;y_test&#39;</span><span class="p">]))</span>
+
+<span class="n">model</span> <span class="o">=</span> <span class="n">SemiMVBLSRegressor</span><span class="p">(</span><span class="n">view_list</span><span class="o">=</span><span class="n">data_train</span><span class="o">.</span><span class="n">keys</span><span class="p">(),</span> <span class="n">unlabeled_data</span><span class="o">=</span><span class="n">unlabeled_data_train</span><span class="p">,</span> <span class="n">reg_lambda</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span> <span class="n">n_nodes_Z</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">n_nodes_H</span><span class="o">=</span><span class="mi">6000</span><span class="p">,</span>
+                           <span class="n">n_groups_Z</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">reg_alpha</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span> <span class="n">reg_laplacian</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span> <span class="n">k_neighbors</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">sigma</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
+<span class="n">model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">data_train</span><span class="p">,</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;y_train&#39;</span><span class="p">][</span><span class="n">few_short_index</span><span class="p">])</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;R^2 of SemiMVBLSRegressor: </span><span class="si">%.3f</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">model</span><span class="o">.</span><span class="n">score</span><span class="p">(</span><span class="n">data_test</span><span class="p">,</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;y_test&#39;</span><span class="p">]))</span> 
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">R</span><span class="o">^</span><span class="mi">2</span> <span class="n">of</span> <span class="n">Baseline</span><span class="p">:</span> <span class="mf">0.456</span>
+<span class="n">R</span><span class="o">^</span><span class="mi">2</span> <span class="n">of</span> <span class="n">SemiMVBLSRegressor</span><span class="p">:</span> <span class="mf">0.828</span>
+</pre></div>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="Parameters-Tuning.html" class="btn btn-neutral float-left" title="Parameters Tuning" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, Chang-ming Zhao (HUST BCI&amp;ML Lab).</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

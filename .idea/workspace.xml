@@ -2,18 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="8b7cb27e-fbf9-42ab-af54-2d82337201ea" name="Changes" comment="test">
-      <change afterPath="$PROJECT_DIR$/dist/MVBLS-0.0.2-py3-none-any.whl" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/dist/MVBLS-0.0.2.tar.gz" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/test.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/MVBLS.egg-info/PKG-INFO" beforeDir="false" afterPath="$PROJECT_DIR$/MVBLS.egg-info/PKG-INFO" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/MVBLS.egg-info/SOURCES.txt" beforeDir="false" afterPath="$PROJECT_DIR$/MVBLS.egg-info/SOURCES.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/MVBLS.egg-info/top_level.txt" beforeDir="false" afterPath="$PROJECT_DIR$/MVBLS.egg-info/top_level.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/build/lib/src/MVBLS.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/build/lib/src/__init__.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/build/lib/src/_version.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/dist/MVBLS-0.0.1-py3-none-any.whl" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/dist/MVBLS-0.0.1.tar.gz" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/setup.py" beforeDir="false" afterPath="$PROJECT_DIR$/setup.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -57,7 +46,7 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1647072823380</updated>
-      <workItem from="1647072830146" duration="7738000" />
+      <workItem from="1647072830146" duration="10822000" />
     </task>
     <task id="LOCAL-00001" summary="test">
       <created>1647072962187</created>
@@ -143,7 +132,14 @@
       <option name="project" value="LOCAL" />
       <updated>1647081745499</updated>
     </task>
-    <option name="localTasksCounter" value="13" />
+    <task id="LOCAL-00013" summary="test">
+      <created>1647085195726</created>
+      <option name="number" value="00013" />
+      <option name="presentableId" value="LOCAL-00013" />
+      <option name="project" value="LOCAL" />
+      <updated>1647085195726</updated>
+    </task>
+    <option name="localTasksCounter" value="14" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">

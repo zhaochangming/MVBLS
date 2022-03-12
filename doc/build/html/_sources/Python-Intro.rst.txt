@@ -118,4 +118,3 @@ A model that has been trained or loaded can perform predictions on datasets:
         data['view2'] = np.random.rand(7, 10)
         data['view3'] = np.random.rand(7, 10)
         ypred = estimator.predict(data)
-

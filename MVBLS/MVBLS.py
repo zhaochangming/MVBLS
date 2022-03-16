@@ -45,24 +45,20 @@ class SemiRidge:
         X = X.copy()
         y = y.copy()
         y = np.asarray(y, dtype=X.dtype)
-        if sample_weight is not None:
-            sample_weight = _check_sample_weight(sample_weight, X, dtype=X.dtype)
-            sample_weight_sum = sample_weight.sum()
-            if sample_weight_sum > 0.0:
-                sample_weight = sample_weight / sample_weight_sum * len(y)
         num_labeled = len(y)
         X_offset = np.average(X, axis=0, weights=sample_weight)
         X -= X_offset
-        y_offset = np.average(y, axis=0, weights=sample_weight)
+        y_offset = np.average(y, axis=0, weights=sample_weight[: num_labeled])
         y -= y_offset
         feature_dim = X.shape[1]
         X_labeled = X[: num_labeled]
-        number_balance = num_labeled / len(X)
+        number_balance = sample_weight[: num_labeled].sum() / sample_weight.sum()
         L = self._generate_laplacian_matrix(X, min(self.k_neighbors, len(X) - 1), self.sigma)
+        labeled_weight = np.diag(sample_weight[: num_labeled])
         sample_weight = np.diag(sample_weight)
         self.coef_ = np.linalg.inv(
-            X_labeled.T @ sample_weight @ X_labeled + self.reg_alpha * np.eye(
-                feature_dim) + self.reg_laplacian * number_balance * X.T @ L @ X) @ X_labeled.T @ sample_weight @ y
+            X_labeled.T @ labeled_weight @ X_labeled + self.reg_alpha * np.eye(
+                feature_dim) + self.reg_laplacian * number_balance * X.T @ L @ sample_weight @ X) @ X_labeled.T @ labeled_weight @ y
         self.intercept_ = y_offset - np.dot(X_offset, self.coef_)
 
     def predict(self, X):
@@ -99,7 +95,7 @@ class NodeGenerator:
         b = 2 * random.random(size=(1, node_size)) - 1
         return W, b
 
-    def _generate_h(self, data):
+    def _generate_h(self, data, sample_weight=None):
 
         self.nonlinear_ = {
             'linear': self._linear,
@@ -115,9 +111,10 @@ class NodeGenerator:
         else:
             self.W_H_ = orth(W_H.T).T
         data_ = np.dot(data, self.W_H_) + self.b_H_
-        return self.nonlinear_(self.scaler_H_.fit_transform(data_))
+        self.scaler_H_.fit(data_, sample_weight=sample_weight)
+        return self.nonlinear_(self.scaler_H_.transform(data_))
 
-    def _generate_z(self, X, view=None):
+    def _generate_z(self, X, sample_weight=None, view=None):
         fea_dim = X.shape[1]
         if view is not None:
             try:
@@ -133,10 +130,21 @@ class NodeGenerator:
                 W_Z, b_Z = self._generator(fea_dim, self.n_nodes_Z)
                 data_ = np.dot(X, W_Z) + b_Z
                 model = Lasso(alpha=self.reg_lambda, max_iter=1000)
-                model.fit(data_, X)
-                self.W_Z_[view].append(model.coef_)
+                if sample_weight is not None:
+                    model.fit(data_, X, sample_weight=sample_weight.copy())
+                else:
+                    model.fit(data_, X)
+                if fea_dim > 1:
+                    self.W_Z_[view].append(model.coef_)
+                else:
+                    self.W_Z_[view].append(model.coef_.reshape(1, -1))
                 self.scaler_Z_[view].append(StandardScaler())
-                Z_ = self.scaler_Z_[view][i].fit_transform(np.dot(X, self.W_Z_[view][i]))
+                Z_ = np.dot(X, self.W_Z_[view][i])
+                if sample_weight is not None:
+                    self.scaler_Z_[view][i].fit(Z_, sample_weight=sample_weight.copy())
+                else:
+                    self.scaler_Z_[view][i].fit(Z_)
+                Z_ = self.scaler_Z_[view][i].transform(Z_)
                 if Z is None:
                     Z = Z_
                 else:
@@ -149,13 +157,21 @@ class NodeGenerator:
                 W_Z, b_Z = self._generator(fea_dim, self.n_nodes_Z)
                 data_ = np.dot(X, W_Z) + b_Z
                 model = Lasso(alpha=self.reg_lambda, max_iter=1000)
-                model.fit(data_, X)
+                if sample_weight is not None:
+                    model.fit(data_, X, sample_weight=sample_weight.copy())
+                else:
+                    model.fit(data_, X)
                 if fea_dim > 1:
                     self.W_Z_.append(model.coef_)
                 else:
                     self.W_Z_.append(model.coef_.reshape(1, -1))
                 self.scaler_Z_.append(StandardScaler())
-                Z_ = self.scaler_Z_[i].fit_transform(np.dot(X, self.W_Z_[i]))
+                Z_ = np.dot(X, self.W_Z_[i])
+                if sample_weight is not None:
+                    self.scaler_Z_[i].fit(Z_, sample_weight=sample_weight.copy())
+                else:
+                    self.scaler_Z_[i].fit(Z_)
+                Z_ = self.scaler_Z_[i].transform(Z_)
                 if Z is None:
                     Z = Z_
                 else:
@@ -242,21 +258,24 @@ class MVBLS(NodeGenerator, BaseEstimator, metaclass=ABCMeta):
         np.random.seed(self.random_state)
         self.estimator_ = Ridge(alpha=self.reg_alpha)
         # generate Z
+
         if self.view_list is not None:
             assert isinstance(X, dict)
             Z = None
             for view in self.view_list:
                 X_, y = check_X_y(X[view], y, dtype=[np.float64, np.float32], multi_output=True, y_numeric=True)
-                Z_ = self._generate_z(X_, view)
+                sample_weight = _check_sample_weight(sample_weight, X_, dtype=X_.dtype)
+                Z_ = self._generate_z(X_, sample_weight=sample_weight, view=view)
                 if Z is None:
                     Z = Z_
                 else:
                     Z = np.c_[Z, Z_]
         else:
             X, y = check_X_y(X, y, dtype=[np.float64, np.float32], multi_output=True, y_numeric=True)
-            Z = self._generate_z(X, view=None)
+            sample_weight = _check_sample_weight(sample_weight, X, dtype=X.dtype)
+            Z = self._generate_z(X, sample_weight=sample_weight, view=None)
         # generate H
-        H = self._generate_h(Z)
+        H = self._generate_h(Z, sample_weight)
         self.estimator_.fit(np.c_[Z, H], y, sample_weight=sample_weight)
         return self
 
@@ -372,7 +391,7 @@ class MVBLSClassifier(ClassifierMixin, MVBLS):
         self._label_binarizer = LabelBinarizer(pos_label=1, neg_label=-1)
         Y = self._label_binarizer.fit_transform(y)
         if not self._label_binarizer.y_type_.startswith('multilabel'):
-            y = column_or_1d(y, warn=True)
+            _ = column_or_1d(y, warn=True)
         else:
             # we don't (yet) support multi-label classification in Ridge
             raise ValueError(
@@ -411,18 +430,18 @@ class SemiMVBLS(MVBLS):
     def fit(self, X, y, sample_weight=None):
         """Fit Ridge regression model.
 
-                    Parameters
-                    ----------
-                    X : {ndarray, sparse matrix} of shape (n_samples, n_features)
-                        Training data
+            Parameters
+            ----------
+            X : {ndarray, sparse matrix} of shape (n_samples, n_features)
+                Training data
 
-                    y : ndarray of shape (n_samples,) or (n_samples, n_targets)
-                        Target values
+            y : ndarray of shape (n_samples,) or (n_samples, n_targets)
+                Target values
 
-                    Returns
-                    -------
-                    self : returns an instance of self.
-                """
+            Returns
+            -------
+            self : returns an instance of self.
+        """
         if self.unlabeled_data is not None:
             assert isinstance(self.unlabeled_data, dict)
         np.random.seed(self.random_state)
@@ -433,24 +452,32 @@ class SemiMVBLS(MVBLS):
             Z = None
             for view in self.view_list:
                 X_, y = check_X_y(X[view], y, dtype=[np.float64, np.float32], multi_output=True, y_numeric=True)
+                if Z is None:
+                    sample_weight = _check_sample_weight(sample_weight, X_, dtype=X_.dtype)
                 if self.unlabeled_data is None:
-                    Z_ = self._generate_z(X_, view)
+                    Z_ = self._generate_z(X_, sample_weight=sample_weight, view=view)
                 else:
                     uX_ = check_array(self.unlabeled_data[view], dtype=[np.float64, np.float32])
-                    Z_ = self._generate_z(np.r_[X_, uX_], view)
+                    if Z is None:
+                        uW_ = np.ones(len(uX_))
+                        sample_weight = np.r_[sample_weight, uW_]
+                    Z_ = self._generate_z(np.r_[X_, uX_], sample_weight=sample_weight, view=view)
                 if Z is None:
                     Z = Z_
                 else:
                     Z = np.c_[Z, Z_]
         else:
             X, y = check_X_y(X, y, dtype=[np.float64, np.float32], multi_output=True, y_numeric=True)
+            sample_weight = _check_sample_weight(sample_weight, X, dtype=X.dtype)
             if self.unlabeled_data is None:
-                Z = self._generate_z(X, view=None)
+                Z = self._generate_z(X, sample_weight=sample_weight, view=None)
             else:
                 uX_ = check_array(self.unlabeled_data, dtype=[np.float64, np.float32])
-                Z = self._generate_z(np.r_[X, uX_], view=None)
+                uW_ = np.ones(len(uX_))
+                sample_weight = np.r_[sample_weight, uW_]
+                Z = self._generate_z(np.r_[X, uX_], sample_weight=sample_weight, view=None)
         # generate H
-        H = self._generate_h(Z)
+        H = self._generate_h(Z, sample_weight=sample_weight)
         self.estimator_.fit(np.c_[Z, H], y, sample_weight)
         return self
 
@@ -511,26 +538,26 @@ class SemiMVBLSClassifier(ClassifierMixin, SemiMVBLS):
     def fit(self, X, y, sample_weight=None):
         """Fit Ridge classifier model.
 
-                Parameters
-                ----------
-                X : {ndarray, sparse matrix} of shape (n_samples, n_features)
-                    Training data.
+        Parameters
+        ----------
+        X : {ndarray, sparse matrix} of shape (n_samples, n_features)
+            Training data.
 
-                y : ndarray of shape (n_samples,)
-                    Target values.
+        y : ndarray of shape (n_samples,)
+            Target values.
 
-                sample_weight : float or ndarray of shape (n_samples,), default=None
-                    Individual weights for each sample. If given a float, every sample
-                    will have the same weight.
+        sample_weight : float or ndarray of shape (n_samples,), default=None
+            Individual weights for each sample. If given a float, every sample
+            will have the same weight.
 
-                    .. versionadded:: 0.17
-                       *sample_weight* support to Classifier.
+            .. versionadded:: 0.17
+               *sample_weight* support to Classifier.
 
-                Returns
-                -------
-                self : object
-                    Instance of the estimator.
-                """
+        Returns
+        -------
+        self : object
+            Instance of the estimator.
+        """
         self._label_binarizer = LabelBinarizer(pos_label=1, neg_label=-1)
         Y = self._label_binarizer.fit_transform(y)
         if not self._label_binarizer.y_type_.startswith('multilabel'):
@@ -599,9 +626,7 @@ class SemiMVBLSRegressor(MultiOutputMixin, RegressorMixin, SemiMVBLS):
 if __name__ == "__main__":
     # Check if meet Sklearn's manner
     # ------------------------------------
-    check_estimator(MVBLS())
     check_estimator(MVBLSRegressor())
     check_estimator(MVBLSClassifier())
-    check_estimator(SemiMVBLS())
     check_estimator(SemiMVBLSRegressor())
     check_estimator(SemiMVBLSClassifier())

@@ -7,7 +7,7 @@ from sklearn.linear_model import Lasso, Ridge, RidgeClassifier
 from scipy.spatial.distance import cdist
 from scipy.linalg import orth
 from sklearn.utils.estimator_checks import check_estimator
-from sklearn.utils.validation import check_X_y, check_array, check_is_fitted
+from sklearn.utils.validation import check_X_y, check_array, check_is_fitted, _check_sample_weight
 from sklearn.utils import column_or_1d
 import torch
 import joblib
@@ -45,6 +45,11 @@ class SemiRidge:
         X = X.copy()
         y = y.copy()
         y = np.asarray(y, dtype=X.dtype)
+        if sample_weight is not None:
+            sample_weight = _check_sample_weight(sample_weight, X, dtype=X.dtype)
+            sample_weight_sum = sample_weight.sum()
+            if sample_weight_sum > 0.0:
+                sample_weight = sample_weight / sample_weight_sum * len(y)
         num_labeled = len(y)
         X_offset = np.average(X, axis=0, weights=sample_weight)
         X -= X_offset
@@ -54,8 +59,10 @@ class SemiRidge:
         X_labeled = X[: num_labeled]
         number_balance = num_labeled / len(X)
         L = self._generate_laplacian_matrix(X, min(self.k_neighbors, len(X) - 1), self.sigma)
+        sample_weight = np.diag(sample_weight)
         self.coef_ = np.linalg.inv(
-            X_labeled.T @ X_labeled + self.reg_alpha * np.eye(feature_dim) + self.reg_laplacian * number_balance * X.T @ L @ X) @ X_labeled.T @ y
+            X_labeled.T @ sample_weight @ X_labeled + self.reg_alpha * np.eye(
+                feature_dim) + self.reg_laplacian * number_balance * X.T @ L @ X) @ X_labeled.T @ sample_weight @ y
         self.intercept_ = y_offset - np.dot(X_offset, self.coef_)
 
     def predict(self, X):
@@ -217,7 +224,7 @@ class MVBLS(NodeGenerator, BaseEstimator, metaclass=ABCMeta):
         H = self._transform_h(Z)
         return self.estimator_.predict(np.c_[Z, H])
 
-    def fit(self, X, y):
+    def fit(self, X, y, sample_weight=None):
         """Fit Ridge regression model.
 
             Parameters
@@ -250,7 +257,7 @@ class MVBLS(NodeGenerator, BaseEstimator, metaclass=ABCMeta):
             Z = self._generate_z(X, view=None)
         # generate H
         H = self._generate_h(Z)
-        self.estimator_.fit(np.c_[Z, H], y)
+        self.estimator_.fit(np.c_[Z, H], y, sample_weight=sample_weight)
         return self
 
 
@@ -339,7 +346,7 @@ class MVBLSClassifier(ClassifierMixin, MVBLS):
             indices = scores.argmax(axis=1)
         return self.classes_[indices]
 
-    def fit(self, X, y):
+    def fit(self, X, y, sample_weight=None):
         """Fit Ridge classifier model.
 
             Parameters
@@ -371,7 +378,7 @@ class MVBLSClassifier(ClassifierMixin, MVBLS):
             raise ValueError(
                 "%s doesn't support multi-label classification" % (
                     self.__class__.__name__))
-        super().fit(X, Y)
+        super().fit(X, Y, sample_weight)
         return self
 
     @property
@@ -401,7 +408,7 @@ class SemiMVBLS(MVBLS):
         self.unlabeled_data = None
         joblib.dump(self, filename=file)
 
-    def fit(self, X, y):
+    def fit(self, X, y, sample_weight=None):
         """Fit Ridge regression model.
 
                     Parameters
@@ -444,7 +451,7 @@ class SemiMVBLS(MVBLS):
                 Z = self._generate_z(np.r_[X, uX_], view=None)
         # generate H
         H = self._generate_h(Z)
-        self.estimator_.fit(np.c_[Z, H], y)
+        self.estimator_.fit(np.c_[Z, H], y, sample_weight)
         return self
 
 
@@ -501,7 +508,7 @@ class SemiMVBLSClassifier(ClassifierMixin, SemiMVBLS):
             indices = scores.argmax(axis=1)
         return self.classes_[indices]
 
-    def fit(self, X, y):
+    def fit(self, X, y, sample_weight=None):
         """Fit Ridge classifier model.
 
                 Parameters
@@ -530,7 +537,7 @@ class SemiMVBLSClassifier(ClassifierMixin, SemiMVBLS):
             _ = column_or_1d(y, warn=True)
         else:
             raise ValueError("%s doesn't support multi-label classification" % (self.__class__.__name__))
-        super().fit(X, Y)
+        super().fit(X, Y, sample_weight=sample_weight)
         return self
 
     @property

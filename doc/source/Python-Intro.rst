@@ -77,7 +77,7 @@ For instance:
 Training
 --------
 
-Training a model requires a parameter list and data set:
+Training a model requires a parameter dictionary and data set:
 
 .. code:: python
 

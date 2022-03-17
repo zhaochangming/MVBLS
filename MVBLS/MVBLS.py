@@ -515,18 +515,18 @@ class SemiMVBLSClassifier(ClassifierMixin, SemiMVBLS):
 
     def predict(self, X):
         """
-                Predict class labels for samples in X.
+            Predict class labels for samples in X.
 
-                Parameters
-                ----------
-                X : array_like or sparse matrix, shape (n_samples, n_features)
-                    Samples.
+            Parameters
+            ----------
+            X : array_like or sparse matrix, shape (n_samples, n_features)
+                Samples.
 
-                Returns
-                -------
-                C : array, shape [n_samples]
-                    Predicted class label per sample.
-                """
+            Returns
+            -------
+            C : array, shape [n_samples]
+                Predicted class label per sample.
+        """
         scores = self._decision_function(X)
         scores = scores.ravel() if scores.shape[1] == 1 else scores
         if len(scores.shape) == 1:
@@ -536,7 +536,7 @@ class SemiMVBLSClassifier(ClassifierMixin, SemiMVBLS):
         return self.classes_[indices]
 
     def fit(self, X, y, sample_weight=None):
-        """Fit Ridge classifier model.
+        """Build a broad learning systerm model from the training set (X, y).
 
         Parameters
         ----------
@@ -549,9 +549,6 @@ class SemiMVBLSClassifier(ClassifierMixin, SemiMVBLS):
         sample_weight : float or ndarray of shape (n_samples,), default=None
             Individual weights for each sample. If given a float, every sample
             will have the same weight.
-
-            .. versionadded:: 0.17
-               *sample_weight* support to Classifier.
 
         Returns
         -------
@@ -576,19 +573,19 @@ class SemiMVBLSClassifier(ClassifierMixin, SemiMVBLS):
 
 
 class SemiMVBLSRegressor(MultiOutputMixin, RegressorMixin, SemiMVBLS):
-    """
+    """Semi-supervised MVBLS regressor. Construct a broad learning systerm model.
 
             Parameters
             ----------
             reg_laplacian: float, default=1.0
-                        Constant that multiplies the laplacian term. Defaults to 1.0. ``reg_laplacian = 0`` is equivalent to an Ridge regression.
+                        Constant that multiplies the laplacian term. Defaults to 1.0. ``reg_laplacian = 0`` is equivalent to a Ridge regression.
             k_neighbors: int, default=5
-                        Number of neighbors to use when constructing the affinity matrix using the nearest neighbors method.
+                        Number of neighbors to use when constructing the affinity matrix.
             sigma: float, default=1.0
-                Kernel coefficient for rbf.
+                Kernel coefficient for RBF.
             unlabeled_data: {ndarray, sparse matrix} of shape (n_samples, n_features) or {dict}
                     Unlabeled training data.
-            n_nodes_H: int, default=10
+            n_nodes_H: int, default=1000
                         Controls the number of enhancement nodes.
             active_function: {str, ('relu', 'tanh', 'sigmod' or 'linear')}, default='relu'
                             Controls the active function of enhancement nodes.
@@ -596,30 +593,30 @@ class SemiMVBLSRegressor(MultiOutputMixin, RegressorMixin, SemiMVBLS):
                         Controls the number of feature nodes in each group.
             n_groups_Z: int, default=10
                         Controls the number of feature node groups.
-            reg_alpha: float, default=1.0
+            reg_alpha: float, default=0.1
                         Regularization strength; must be a positive float. Regularization improves the conditioning of the problem and reduces the variance of the estimates. Larger values specify stronger regularization.
-            reg_lambda: float, default=1.0
+            reg_lambda: float, default=0.1
                         Constant that multiplies the L1 term. Defaults to 1.0. ``alpha = 0`` is equivalent to an ordinary least square.
             view_list: list, default=None
                         List of view names.
-            random_state: int, default=None
+            random_state: int, default=0
                             Controls the randomness of the estimator.
         """
 
     def predict(self, X):
         """
-                Predict using the linear model.
+            Return the predicted value for each sample.
 
-                Parameters
-                ----------
-                X : array_like or sparse matrix, shape (n_samples, n_features)
-                    Samples.
+            Parameters
+            ----------
+            X : array_like or sparse matrix, shape (n_samples, n_features)
+                Samples.
 
-                Returns
-                -------
-                C : array, shape (n_samples,)
-                    Returns predicted values.
-                """
+            Returns
+            -------
+            C : array, shape (n_samples,)
+                Returns predicted values.
+        """
         return self._decision_function(X)
 
 

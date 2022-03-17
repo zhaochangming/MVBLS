@@ -285,7 +285,7 @@ class MVBLSRegressor(MultiOutputMixin, RegressorMixin, MVBLS):
 
         Parameters
         ----------
-        n_nodes_H: int, default=10
+        n_nodes_H: int, default=1000
                     Controls the number of enhancement nodes.
         active_function: {str, ('relu', 'tanh', 'sigmod' or 'linear')}, default='relu'
                         Controls the active function of enhancement nodes.

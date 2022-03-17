@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setuptools.setup(
     name="MVBLS",  # 用自己的名替换其中的YOUR_USERNAME_
-    version="1.0",  # 包版本号，便于维护版本
+    version="1.1",  # 包版本号，便于维护版本
     author="Chang-ming Zhao",  # 作者，可以写自己的姓名
     author_email="1730514926@qq.com",  # 作者联系方式，可写自己的邮箱地址
     description="Multi-view Broad Learning Systerm",  # 包的简述

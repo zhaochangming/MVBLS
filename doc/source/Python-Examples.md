@@ -1,5 +1,5 @@
 # Python Examples
-This page shows some demos.
+This page shows some Python demos.
 
 ## MVBLS.MVBLSClassifier
 

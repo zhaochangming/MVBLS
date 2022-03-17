@@ -490,12 +490,12 @@ class SemiMVBLSClassifier(ClassifierMixin, SemiMVBLS):
         reg_laplacian: float, default=1.0
                     Constant that multiplies the laplacian term. Defaults to 1.0. ``reg_laplacian = 0`` is equivalent to a Ridge regression.
         k_neighbors: int, default=5
-                    Number of neighbors to use when constructing the affinity matrix using the nearest neighbors method.
+                    Number of neighbors to use when constructing the affinity matrix.
         sigma: float, default=1.0
-            Kernel coefficient for rbf.
+            Kernel coefficient for RBF.
         unlabeled_data: {ndarray, sparse matrix} of shape (n_samples, n_features) or {dict}
                 Unlabeled training data.
-        n_nodes_H: int, default=10
+        n_nodes_H: int, default=1000
                     Controls the number of enhancement nodes.
         active_function: {str, ('relu', 'tanh', 'sigmod' or 'linear')}, default='relu'
                         Controls the active function of enhancement nodes.
@@ -503,13 +503,13 @@ class SemiMVBLSClassifier(ClassifierMixin, SemiMVBLS):
                     Controls the number of feature nodes in each group.
         n_groups_Z: int, default=10
                     Controls the number of feature node groups.
-        reg_alpha: float, default=1.0
+        reg_alpha: float, default=0.1
                     Regularization strength; must be a positive float. Regularization improves the conditioning of the problem and reduces the variance of the estimates. Larger values specify stronger regularization.
-        reg_lambda: float, default=1.0
+        reg_lambda: float, default=0.1
                     Constant that multiplies the L1 term. Defaults to 1.0. ``reg_lambda = 0`` is equivalent to an ordinary least square.
         view_list: list, default=None
                     List of view names.
-        random_state: int, default=None
+        random_state: int, default=0
                         Controls the randomness of the estimator.
     """
 

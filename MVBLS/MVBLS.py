@@ -283,25 +283,25 @@ class MVBLS(NodeGenerator, BaseEstimator, metaclass=ABCMeta):
 class MVBLSRegressor(MultiOutputMixin, RegressorMixin, MVBLS):
     """
 
-            Parameters
-            ----------
-            n_nodes_H: int, default=10
-                        Controls the number of enhancement nodes.
-            active_function: {str, ('relu', 'tanh', 'sigmod' or 'linear')}, default='relu'
-                            Controls the active function of enhancement nodes.
-            n_nodes_Z: int, default=10
-                        Controls the number of feature nodes in each group.
-            n_groups_Z: int, default=10
-                        Controls the number of feature node groups.
-            reg_alpha: float, default=1.0
-                        Regularization strength; must be a positive float. Regularization improves the conditioning of the problem and reduces the variance of the estimates. Larger values specify stronger regularization.
-            reg_lambda: float, default=1.0
-                        Constant that multiplies the L1 term. Defaults to 1.0. ``alpha = 0`` is equivalent to an ordinary least square.
-            view_list: list, default=None
-                        List of view names.
-            random_state: int, default=None
-                            Controls the randomness of the estimator.
-        """
+        Parameters
+        ----------
+        n_nodes_H: int, default=10
+                    Controls the number of enhancement nodes.
+        active_function: {str, ('relu', 'tanh', 'sigmod' or 'linear')}, default='relu'
+                        Controls the active function of enhancement nodes.
+        n_nodes_Z: int, default=10
+                    Controls the number of feature nodes in each group.
+        n_groups_Z: int, default=10
+                    Controls the number of feature node groups.
+        reg_alpha: float, default=1.0
+                    Regularization strength; must be a positive float. Regularization improves the conditioning of the problem and reduces the variance of the estimates. Larger values specify stronger regularization.
+        reg_lambda: float, default=1.0
+                    Constant that multiplies the L1 term. Defaults to 1.0. ``alpha = 0`` is equivalent to an ordinary least square.
+        view_list: list, default=None
+                    List of view names.
+        random_state: int, default=None
+                        Controls the randomness of the estimator.
+    """
 
     def predict(self, X):
         """

@@ -323,6 +323,7 @@ class MVBLSRegressor(MultiOutputMixin, RegressorMixin, MVBLS):
 class MVBLSClassifier(ClassifierMixin, MVBLS):
     """
         MVBLS classifier. Construct a broad learning systerm model.
+
         Parameters
         ----------
         n_nodes_H: int, default=1000

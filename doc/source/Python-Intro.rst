@@ -16,7 +16,7 @@ This document gives a basic walk-through of MVBLS Python-package.
 Install
 -------
 
-The preferred way to install MVBLS is via pip:
+The preferred way to install MVBLS is via pip from `Pypi <https://pypi.org/project/MVBLS>`__:
 
 ::
 

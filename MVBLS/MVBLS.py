@@ -293,13 +293,13 @@ class MVBLSRegressor(MultiOutputMixin, RegressorMixin, MVBLS):
                     Controls the number of feature nodes in each group.
         n_groups_Z: int, default=10
                     Controls the number of feature node groups.
-        reg_alpha: float, default=1.0
+        reg_alpha: float, default=0.1
                     Regularization strength; must be a positive float. Regularization improves the conditioning of the problem and reduces the variance of the estimates. Larger values specify stronger regularization.
-        reg_lambda: float, default=1.0
+        reg_lambda: float, default=0.1
                     Constant that multiplies the L1 term. Defaults to 1.0. ``alpha = 0`` is equivalent to an ordinary least square.
         view_list: list, default=None
                     List of view names.
-        random_state: int, default=None
+        random_state: int, default=0
                         Controls the randomness of the estimator.
     """
 

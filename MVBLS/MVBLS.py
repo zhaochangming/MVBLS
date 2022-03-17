@@ -305,18 +305,18 @@ class MVBLSRegressor(MultiOutputMixin, RegressorMixin, MVBLS):
 
     def predict(self, X):
         """
-                Predict using the linear model.
+            Return the predicted value for each sample.
 
-                Parameters
-                ----------
-                X : array_like or sparse matrix, shape (n_samples, n_features)
-                    Samples.
+            Parameters
+            ----------
+            X : array_like or sparse matrix, shape (n_samples, n_features)
+                Samples.
 
-                Returns
-                -------
-                C : array, shape (n_samples,)
-                    Returns predicted values.
-                """
+            Returns
+            -------
+            C : array, shape (n_samples,)
+                Returns predicted values.
+        """
         return self._decision_function(X)
 
 

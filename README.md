@@ -1,13 +1,13 @@
 # Multi-view Broad Learning Systerm (MVBLS)
 
 
-[//]: # ([![Python Versions]&#40;https://img.shields.io/pypi/pyversions/MVBLS.svg?logo=python&logoColor=white&#41;]&#40;https://pypi.org/project/MVBLS&#41;)
+[![Python Versions](https://img.shields.io/pypi/pyversions/MVBLS.svg?logo=python&logoColor=white)](https://pypi.org/project/MVBLS)
 
-[//]: # ([![Documentation Status]&#40;https://readthedocs.org/projects/mvbls/badge/?version=latest&#41;]&#40;https://mvbls.readthedocs.io/&#41;)
+[![Documentation Status](https://readthedocs.org/projects/mvbls/badge/?version=latest)](https://mvbls.readthedocs.io/)
 
-[//]: # ([![PyPI Version]&#40;https://img.shields.io/pypi/v/MVBLS.svg?logo=pypi&logoColor=white&#41;]&#40;https://pypi.org/project/MVBLS&#41;)
+[![PyPI Version](https://img.shields.io/pypi/v/MVBLS.svg?logo=pypi&logoColor=white)](https://pypi.org/project/MVBLS)
 
-[//]: # ([![License]&#40;https://img.shields.io/github/license/zhaochangming/MVBLS.svg&#41;]&#40;https://github.com/zhaochangming/MVBLS/blob/main/LICENSE&#41;)
+[![License](https://img.shields.io/github/license/zhaochangming/MVBLS.svg)](https://github.com/zhaochangming/MVBLS/blob/main/LICENSE)
 
 **Multi-view broad learning systerm (MVBLS)** [1] is a multi-view framework that bases on BLS [2]. It is designed to be efficient with the following advantages:
 

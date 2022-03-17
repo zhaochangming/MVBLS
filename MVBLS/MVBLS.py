@@ -241,7 +241,7 @@ class MVBLS(NodeGenerator, BaseEstimator, metaclass=ABCMeta):
         return self.estimator_.predict(np.c_[Z, H])
 
     def fit(self, X, y, sample_weight=None):
-        """Fit Ridge regression model.
+        """Build a broad learning systerm model from the training set (X, y).
 
             Parameters
             ----------
@@ -282,6 +282,7 @@ class MVBLS(NodeGenerator, BaseEstimator, metaclass=ABCMeta):
 
 class MVBLSRegressor(MultiOutputMixin, RegressorMixin, MVBLS):
     """
+        MVBLS Regressor. Construct a broad learning systerm model.
 
         Parameters
         ----------

@@ -2,11 +2,11 @@
 Welcome to MVBLS's documentation!
 =======================================
 
-**Multi-view broad learning systerm (MVBLS)** [1] is a multi-view or multi-modal framework that bases on BLS [2]. It is designed to be efficient with the following advantages:
+**Multi-view broad learning systerm (MVBLS)** [1] is a multi-view  framework that bases on BLS [2]. It is designed to be efficient with the following advantages:
 
 
-- Support of classification and regression in supervised learning.
-- Support of classification and regression in semi-supervised learning [3].
+- Support of classification and regression in supervised multi-view or multi-modal learning.
+- Support of classification and regression in semi-supervised multi-view or multi-modal learning [3].
 - Support of two or more views or modals.
 
 .. toctree::

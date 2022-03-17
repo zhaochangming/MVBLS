@@ -20,3 +20,11 @@ Next you may want to read:
 - [**APIs & Parameters**](https://mvbls.readthedocs.io/en/latest/MVBLS.html) is an exhaustive list of customization you can make.
 - [**Parameters Tuning**](https://mvbls.readthedocs.io/en/latest/Parameters-Tuning.html) is an exhaustive list of customization you can make.
 - [**Examples**](https://mvbls.readthedocs.io/en/latest/Python-Examples.html) showing command line usage of common tasks.
+
+## References
+
+[1] Z. Shi, X. Chen, C. Zhao, H. He, V. Stuphorn and D. Wu, "Multi-view broad learning system for primate oculomotor decision decoding," in IEEE Trans. on Neural Systems and Rehabilitation Engineering, vol. 28, no. 9, pp. 1908-1920, 2020.
+
+[2] C. L. P. Chen and Z. Liu, "Broad learning system: An effective and efficient incremental learning system without the need for deep architecture," in IEEE Trans. on Neural Networks and Learning Systems, vol. 29, no. 1, pp. 10-24, 2018.
+
+[3] T. Qiu, X. Liu, X. Zhou, W. Qu, Z. Ning and C. L. P. Chen, "An adaptive social spammer detection model with semi-supervised broad learning," in IEEE Trans. on Knowledge and Data Engineering, doi: 10.1109/TKDE.2020.3047857.

@@ -20,6 +20,6 @@ Deal with Over-fitting
 
 -  Try ``reg_alpha``, ``reg_lambda``, ``reg_laplacian`` and ``sigma`` for regularization
 
--  Try ``n_nodes_Z`` for generating feature nodes
+-  Try ``n_nodes_Z`` for generating suitable feature nodes
 
 

@@ -339,24 +339,24 @@ class MVBLSClassifier(ClassifierMixin, MVBLS):
                     Constant that multiplies the L1 term. Defaults to 1.0. ``reg_lambda = 0`` is equivalent to an ordinary least square.
         view_list: list, default=None
                     List of view names.
-        random_state: int, default=None
+        random_state: int, default=0
                         Controls the randomness of the estimator.
     """
 
     def predict(self, X):
         """
-                Predict class labels for samples in X.
+            Predict class labels for samples in X.
 
-                Parameters
-                ----------
-                X : array_like or sparse matrix, shape (n_samples, n_features)
-                    Samples.
+            Parameters
+            ----------
+            X : array_like or sparse matrix, shape (n_samples, n_features)
+                Samples.
 
-                Returns
-                -------
-                C : array, shape [n_samples]
-                    Predicted class label per sample.
-                """
+            Returns
+            -------
+            C : array, shape [n_samples]
+                Predicted class label per sample.
+        """
         scores = self._decision_function(X)
         scores = scores.ravel() if scores.shape[1] == 1 else scores
         if len(scores.shape) == 1:
@@ -366,7 +366,8 @@ class MVBLSClassifier(ClassifierMixin, MVBLS):
         return self.classes_[indices]
 
     def fit(self, X, y, sample_weight=None):
-        """Fit Ridge classifier model.
+        """
+            Build a broad learning systerm model from the training set (X, y).
 
             Parameters
             ----------
@@ -379,9 +380,6 @@ class MVBLSClassifier(ClassifierMixin, MVBLS):
             sample_weight : float or ndarray of shape (n_samples,), default=None
                 Individual weights for each sample. If given a float, every sample
                 will have the same weight.
-
-                .. versionadded:: 0.17
-                   *sample_weight* support to Classifier.
 
             Returns
             -------

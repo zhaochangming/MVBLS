@@ -14,8 +14,8 @@ setuptools.setup(
     url="https://github.com/zhaochangming/MVBLS",  # 自己项目地址，比如github的项目地址
     packages=setuptools.find_packages(),
     classifiers=[
-        "Programming Language :: Python :: 3",
-        "License :: OSI Approved :: Apache License, Version 2.0 (Apache-2.0)",
+        "Programming Language :: Python :: 3.6",
+        "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
     ],
     python_requires='>=3.6',  # 对python的最低版本要求

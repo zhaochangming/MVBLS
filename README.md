@@ -6,7 +6,7 @@
 [![PyPI Version](https://img.shields.io/pypi/v/MVBLS.svg?logo=pypi&logoColor=white)](https://pypi.org/project/MVBLS)
 [![License](https://img.shields.io/github/license/zhaochangming/MVBLS.svg)](https://github.com/zhaochangming/MVBLS/blob/main/LICENSE)
 
-**Multi-view broad learning systerm (MVBLS)** [1] is a multi-view  framework that bases on BLS [2]. It is designed to be efficient with the following advantages:
+**Multi-view broad learning systerm (MVBLS)** [1] is a multi-view framework that bases on BLS [2]. It is designed to be efficient with the following advantages:
 
 - Support of classification and regression in supervised multi-view or multi-modal learning.
 - Support of classification and regression in semi-supervised multi-view or multi-modal learning [3].

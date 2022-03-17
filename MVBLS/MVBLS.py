@@ -203,7 +203,7 @@ class NodeGenerator:
 
 class MVBLS(NodeGenerator, BaseEstimator, metaclass=ABCMeta):
 
-    def __init__(self, n_nodes_H=100, active_function='relu', n_nodes_Z=10, n_groups_Z=10, reg_alpha=0.1, reg_lambda=0.1, view_list=None,
+    def __init__(self, n_nodes_H=1000, active_function='relu', n_nodes_Z=10, n_groups_Z=10, reg_alpha=0.1, reg_lambda=0.1, view_list=None,
                  random_state=0):
 
         NodeGenerator.__init__(self, active_function=active_function, n_nodes_H=n_nodes_H, n_nodes_Z=n_nodes_Z, n_groups_Z=n_groups_Z,
@@ -322,10 +322,10 @@ class MVBLSRegressor(MultiOutputMixin, RegressorMixin, MVBLS):
 
 class MVBLSClassifier(ClassifierMixin, MVBLS):
     """
-
+        MVBLS classifier. Construct a broad learning systerm model.
         Parameters
         ----------
-        n_nodes_H: int, default=10
+        n_nodes_H: int, default=1000
                     Controls the number of enhancement nodes.
         active_function: {str, ('relu', 'tanh', 'sigmod' or 'linear')}, default='relu'
                         Controls the active function of enhancement nodes.
@@ -333,10 +333,10 @@ class MVBLSClassifier(ClassifierMixin, MVBLS):
                     Controls the number of feature nodes in each group.
         n_groups_Z: int, default=10
                     Controls the number of feature node groups.
-        reg_alpha: float, default=1.0
+        reg_alpha: float, default=0.1
                     Regularization strength; must be a positive float. Regularization improves the conditioning of the problem and reduces the variance of the estimates. Larger values specify stronger regularization.
-        reg_lambda: float, default=1.0
-                    Constant that multiplies the L1 term. Defaults to 1.0. ``alpha = 0`` is equivalent to an ordinary least square.
+        reg_lambda: float, default=0.1
+                    Constant that multiplies the L1 term. Defaults to 1.0. ``reg_lambda = 0`` is equivalent to an ordinary least square.
         view_list: list, default=None
                     List of view names.
         random_state: int, default=None

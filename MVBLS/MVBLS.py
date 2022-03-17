@@ -288,7 +288,7 @@ class MVBLSRegressor(MultiOutputMixin, RegressorMixin, MVBLS):
         ----------
         n_nodes_H: int, default=1000
                     Controls the number of enhancement nodes.
-        active_function: {str, ('relu', 'tanh', 'sigmod' or 'linear')}, default='relu'
+        active_function: {str, ('relu', 'tanh', 'sigmoid' or 'linear')}, default='relu'
                         Controls the active function of enhancement nodes.
         n_nodes_Z: int, default=10
                     Controls the number of feature nodes in each group.
@@ -329,7 +329,7 @@ class MVBLSClassifier(ClassifierMixin, MVBLS):
         ----------
         n_nodes_H: int, default=1000
                     Controls the number of enhancement nodes.
-        active_function: {str, ('relu', 'tanh', 'sigmod' or 'linear')}, default='relu'
+        active_function: {str, ('relu', 'tanh', 'sigmoid' or 'linear')}, default='relu'
                         Controls the active function of enhancement nodes.
         n_nodes_Z: int, default=10
                     Controls the number of feature nodes in each group.
@@ -497,7 +497,7 @@ class SemiMVBLSClassifier(ClassifierMixin, SemiMVBLS):
                 Unlabeled training data.
         n_nodes_H: int, default=1000
                     Controls the number of enhancement nodes.
-        active_function: {str, ('relu', 'tanh', 'sigmod' or 'linear')}, default='relu'
+        active_function: {str, ('relu', 'tanh', 'sigmoid' or 'linear')}, default='relu'
                         Controls the active function of enhancement nodes.
         n_nodes_Z: int, default=10
                     Controls the number of feature nodes in each group.
@@ -587,7 +587,7 @@ class SemiMVBLSRegressor(MultiOutputMixin, RegressorMixin, SemiMVBLS):
                     Unlabeled training data.
             n_nodes_H: int, default=1000
                         Controls the number of enhancement nodes.
-            active_function: {str, ('relu', 'tanh', 'sigmod' or 'linear')}, default='relu'
+            active_function: {str, ('relu', 'tanh', 'sigmoid' or 'linear')}, default='relu'
                             Controls the active function of enhancement nodes.
             n_nodes_Z: int, default=10
                         Controls the number of feature nodes in each group.

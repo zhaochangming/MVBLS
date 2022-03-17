@@ -409,7 +409,7 @@ class MVBLSClassifier(ClassifierMixin, MVBLS):
 
 
 class SemiMVBLS(MVBLS):
-    def __init__(self, reg_laplacian=0.0, k_neighbors=3, sigma=1.0, unlabeled_data=None, **kwargs):
+    def __init__(self, reg_laplacian=1.0, k_neighbors=5, sigma=1.0, unlabeled_data=None, **kwargs):
         MVBLS.__init__(self, **kwargs)
         self.reg_laplacian = reg_laplacian
         self.k_neighbors = k_neighbors
@@ -428,7 +428,7 @@ class SemiMVBLS(MVBLS):
         joblib.dump(self, filename=file)
 
     def fit(self, X, y, sample_weight=None):
-        """Fit Ridge regression model.
+        """Build a broad learning systerm model from the training set (X, y).
 
             Parameters
             ----------
@@ -483,35 +483,35 @@ class SemiMVBLS(MVBLS):
 
 
 class SemiMVBLSClassifier(ClassifierMixin, SemiMVBLS):
-    """
+    """Semi-supervised MVBLS classifier. Construct a broad learning systerm model.
 
-            Parameters
-            ----------
-            reg_laplacian: float, default=1.0
-                        Constant that multiplies the laplacian term. Defaults to 1.0. ``reg_laplacian = 0`` is equivalent to an Ridge regression.
-            k_neighbors: int, default=5
-                        Number of neighbors to use when constructing the affinity matrix using the nearest neighbors method.
-            sigma: float, default=1.0
-                Kernel coefficient for rbf.
-            unlabeled_data: {ndarray, sparse matrix} of shape (n_samples, n_features) or {dict}
-                    Unlabeled training data.
-            n_nodes_H: int, default=10
-                        Controls the number of enhancement nodes.
-            active_function: {str, ('relu', 'tanh', 'sigmod' or 'linear')}, default='relu'
-                            Controls the active function of enhancement nodes.
-            n_nodes_Z: int, default=10
-                        Controls the number of feature nodes in each group.
-            n_groups_Z: int, default=10
-                        Controls the number of feature node groups.
-            reg_alpha: float, default=1.0
-                        Regularization strength; must be a positive float. Regularization improves the conditioning of the problem and reduces the variance of the estimates. Larger values specify stronger regularization.
-            reg_lambda: float, default=1.0
-                        Constant that multiplies the L1 term. Defaults to 1.0. ``reg_lambda = 0`` is equivalent to an ordinary least square.
-            view_list: list, default=None
-                        List of view names.
-            random_state: int, default=None
-                            Controls the randomness of the estimator.
-        """
+        Parameters
+        ----------
+        reg_laplacian: float, default=1.0
+                    Constant that multiplies the laplacian term. Defaults to 1.0. ``reg_laplacian = 0`` is equivalent to a Ridge regression.
+        k_neighbors: int, default=5
+                    Number of neighbors to use when constructing the affinity matrix using the nearest neighbors method.
+        sigma: float, default=1.0
+            Kernel coefficient for rbf.
+        unlabeled_data: {ndarray, sparse matrix} of shape (n_samples, n_features) or {dict}
+                Unlabeled training data.
+        n_nodes_H: int, default=10
+                    Controls the number of enhancement nodes.
+        active_function: {str, ('relu', 'tanh', 'sigmod' or 'linear')}, default='relu'
+                        Controls the active function of enhancement nodes.
+        n_nodes_Z: int, default=10
+                    Controls the number of feature nodes in each group.
+        n_groups_Z: int, default=10
+                    Controls the number of feature node groups.
+        reg_alpha: float, default=1.0
+                    Regularization strength; must be a positive float. Regularization improves the conditioning of the problem and reduces the variance of the estimates. Larger values specify stronger regularization.
+        reg_lambda: float, default=1.0
+                    Constant that multiplies the L1 term. Defaults to 1.0. ``reg_lambda = 0`` is equivalent to an ordinary least square.
+        view_list: list, default=None
+                    List of view names.
+        random_state: int, default=None
+                        Controls the randomness of the estimator.
+    """
 
     def predict(self, X):
         """

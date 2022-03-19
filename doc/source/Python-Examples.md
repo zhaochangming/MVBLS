@@ -10,7 +10,7 @@ import numpy as np
 from MVBLS import MVBLSClassifier
 from sklearn.linear_model import RidgeClassifier
 
-data = np.load('clf_data.npz')
+data = np.load('data/clf_data.npz')
 data_train = {}
 data_train['view1'] = data['X_train'][:, :128]
 data_train['view2'] = data['X_train'][:, 128:]
@@ -39,7 +39,7 @@ import numpy as np
 from MVBLS import MVBLSRegressor
 from sklearn.linear_model import Ridge
 
-data = np.load('reg_data.npz')
+data = np.load('data/reg_data.npz')
 data_train = {}
 data_train['view1'] = data['X_train'][:, :128]
 data_train['view2'] = data['X_train'][:, 128:]
@@ -67,7 +67,7 @@ import numpy as np
 from MVBLS import SemiMVBLSClassifier
 from sklearn.linear_model import RidgeClassifier
 
-data = np.load('clf_data.npz')
+data = np.load('data/clf_data.npz')
 few_short_index = data['few_short_index']
 data_train = {}
 unlabeled_data_train = {}
@@ -101,7 +101,7 @@ import numpy as np
 from MVBLS import SemiMVBLSRegressor
 from sklearn.linear_model import Ridge
 
-data = np.load('reg_data.npz')
+data = np.load('data/reg_data.npz')
 few_short_index = data['few_short_index']
 data_train = {}
 unlabeled_data_train = {}

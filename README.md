@@ -14,7 +14,7 @@
 
 ## Get Started and Documentation
 
-Our primary documentation is at https://mvbls.readthedocs.io/ and is generated from this repository. If you are new to MVBLS, follow [the installation instructions](https://mvbls.readthedocs.io/en/latest/Python-Intro.html) on that site. The preferred way to install MVBLS is via pip from [Pypi](https://pypi.org/project/MVBLS).
+Our primary documentation is at https://mvbls.readthedocs.io and is generated from this repository. If you are new to MVBLS, follow [the installation instructions](https://mvbls.readthedocs.io/en/latest/Python-Intro.html) on that site. The preferred way to install MVBLS is via pip from [Pypi](https://pypi.org/project/MVBLS).
 
 Next you may want to read:
 - [**APIs & Parameters**](https://mvbls.readthedocs.io/en/latest/MVBLS.html) is an exhaustive list of customization you can make.

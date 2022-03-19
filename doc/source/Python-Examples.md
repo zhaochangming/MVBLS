@@ -1,5 +1,6 @@
 # Python Examples
 This page shows some Python demos.
+``clf_data.npz`` and ``reg_data.npz`` can be downloaded at [data](https://github.com/zhaochangming/MVBLS/tree/main/data).
 
 ## MVBLS.MVBLSClassifier
 

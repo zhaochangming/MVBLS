@@ -245,7 +245,7 @@ class MVBLS(NodeGenerator, BaseEstimator, metaclass=ABCMeta):
 
             Parameters
             ----------
-            X : {ndarray, sparse matrix} of shape (n_samples, n_features)
+            X : {ndarray, sparse matrix} of shape (n_samples, n_features) or dict
                 Training data
 
             y : ndarray of shape (n_samples,) or (n_samples, n_targets)
@@ -373,7 +373,7 @@ class MVBLSClassifier(ClassifierMixin, MVBLS):
 
             Parameters
             ----------
-            X : {ndarray, sparse matrix} of shape (n_samples, n_features)
+            X : {ndarray, sparse matrix} of shape (n_samples, n_features) or dict
                 Training data.
 
             y : ndarray of shape (n_samples,)
@@ -432,7 +432,7 @@ class SemiMVBLS(MVBLS):
 
             Parameters
             ----------
-            X : {ndarray, sparse matrix} of shape (n_samples, n_features)
+            X : {ndarray, sparse matrix} of shape (n_samples, n_features) or dict
                 Training data
 
             y : ndarray of shape (n_samples,) or (n_samples, n_targets)
@@ -540,7 +540,7 @@ class SemiMVBLSClassifier(ClassifierMixin, SemiMVBLS):
 
         Parameters
         ----------
-        X : {ndarray, sparse matrix} of shape (n_samples, n_features)
+        X : {ndarray, sparse matrix} of shape (n_samples, n_features) or dict
             Training data.
 
         y : ndarray of shape (n_samples,)
